@@ -216,12 +216,12 @@ class BaseRunner implements Runner {
     /**
      * Returns all specified modules, in order.
      */
-    Collection<Module> calculateModules(request, Collection<String> modules) {
+    Collection<Module> calculateModules(request, Collection<String> moduleIds) {
         def inline = getInlineModules(request)
         def rendered = getRenderedModuleIds(request)
 
         // map of ids to modules for each module not rendered in head
-        modules = modules.findAll { !(it in rendered) }.
+        def modules = moduleIds.findAll { !(it in rendered) }.
         inject([:]) { map, id ->
             def module = inline[id] ?: loader ? loader.modules[id] : null
             if (module) {

@@ -39,7 +39,7 @@ interface Runner {
     void inline(Map attrs, request, String content)
 
     /**
-     * Renders the specified module for the specified request.
+     * Renders the specified modules for the specified request.
      * @param request HttpServletRequest
      * @param out Response output.
      * @param modules IDs of modules to include.

@@ -11,9 +11,11 @@ class BaseRunnerSpec extends Specification {
 
     def runner = new BaseRunner(new BaseLoader())
 
+    /*
     def "renderers with no config is empty"() {
         expect: runner.renderers == [:]
     }
+    */
 
 
 
@@ -156,6 +158,92 @@ class BaseRunnerSpec extends Specification {
         then:
         runner.getInlineModules(request).keySet() as List == ['generated1']
         runner.getRequiredModuleIds(request) as List == ['bar', 'baz', 'generated1']
+    }
+
+
+
+    def "no calculated modules when no specified modules"() {
+        setup: def request = [:]
+        expect: !runner.calculateModules(request, [])
+    }
+
+    def "no calculated modules when specified modules not found"() {
+        setup:
+        def log = []
+        runner.loader.log.metaClass.warn = { log << it }
+        def request = [:]
+
+        when:
+        def modules = runner.calculateModules(request, ['foo', 'bar', 'baz'])
+
+        then:
+        !modules
+        log == """
+            no PBR modules configured
+            no module found for required id foo
+            no module found for required id bar
+            no module found for required id baz
+        """.trim().split(/\n/).collect { it.trim() }
+    }
+
+    def "all calculated modules when specified modules not yet rendered"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo'
+        runner.inline request, 'y', id: 'bar'
+        runner.inline request, 'z', id: 'baz'
+
+        expect:
+        runner.calculateModules(request, ['foo', 'bar', 'baz'])*.id ==
+            ['foo', 'bar', 'baz']
+    }
+
+    def "no calculated modules when specified modules already rendered"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo'
+        runner.inline request, 'y', id: 'bar'
+        runner.inline request, 'z', id: 'baz'
+
+        runner.getRenderedModuleIds(request) << 'foo'
+        runner.getRenderedModuleIds(request) << 'bar'
+        runner.getRenderedModuleIds(request) << 'baz'
+
+        expect:
+        !runner.calculateModules(request, ['foo', 'bar', 'baz'])
+    }
+
+    def "all calculated modules when specified module requires non-specified modules"() {
+        setup:
+        runner.loader.modules = [
+            foo: new BaseModule(id: 'foo'),
+            bar: new BaseModule(id: 'bar'),
+            baz: new BaseModule(id: 'baz'),
+        ]
+        runner.loader.modules.with { foo.requires = [ bar, baz ] }
+
+        def request = [:]
+
+        expect:
+        runner.calculateModules(request, ['foo'])*.id == ['bar', 'baz', 'foo']
+    }
+
+    def "all calculated modules even when specified modules do not match foot pattern"() {
+        setup:
+        runner.loader.config.foot.order = '''
+            bar
+            middle
+            foo
+        '''
+
+        def request = [:]
+        runner.inline request, 'x', id: 'foo'
+        runner.inline request, 'y', id: 'bar'
+        runner.inline request, 'z', id: 'baz'
+
+        expect:
+        runner.calculateModules(request, ['foo', 'bar', 'baz'])*.id ==
+            ['bar', 'foo', 'baz']
     }
 
 
