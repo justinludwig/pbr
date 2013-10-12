@@ -50,10 +50,10 @@ class BaseRunner implements Runner {
         def props = [id: id, content: content]
         attrs.findAll { k,v -> k != 'requires' }.each { k,v -> props[k] = v }
 
-        getInlineModules(request)[id] = createModule(props)
+        def module = createModule(props)
+        module.requires = resolveModuleRequirements(request, attrs?.requires)
 
-        // todo: include head script requirements in head
-        require request, attrs?.requires
+        getInlineModules(request)[id] = module
         getRequiredModuleIds(request) << id
     }
 
@@ -61,7 +61,7 @@ class BaseRunner implements Runner {
         if (request == null || !modules) return
 
         if (!(modules instanceof Collection))
-            modules = modules.toString().split(/\s*,\s*/)
+            modules = modules.toString().split(/\s*,\s*/) as List
 
         def rendered = getRenderedModuleIds(request)
         calculateModules(request, modules).each { module ->
@@ -179,6 +179,34 @@ class BaseRunner implements Runner {
         new BaseModule(props)
     }
 
+    /**
+     * Returns the list of modules required (recursively) by module id.
+     * @param request HttpServletRequest
+     * @param requires IDs of required modules.
+     * May be specified as either as a Collection object, or a CSV string.
+     */
+    Collection<Module> resolveModuleRequirements(request, requires) {
+        if (!requires) return []
+
+        if (!(requires instanceof Collection))
+            requires = requires.toString().split(/\s*,\s*/)
+        
+        def inline = getInlineModules(request)
+        def modules = [] as Set
+
+        requires.each { id ->
+            def module = inline[id] ?: loader ? loader.modules[id] : null
+            if (module) {
+                modules << module
+                modules.addAll module.requires
+            } else {
+                loader?.log?.warn "no module found for required id $id"
+            }
+        }
+
+        return modules
+    }
+
     void loadRenderers() {
         renderers = [:]
         def cnf = loader?.config?.contentType?.toRenderer
@@ -195,7 +223,7 @@ class BaseRunner implements Runner {
         def cls = Thread.currentThread().contextClassLoader.loadClass(parts[0])
         def renderer = cls.newInstance()
 
-        renderer.loader = loader
+        renderer.runner = this
         renderer.name = parts.length > 1 ? parts.tail().join(' ') : cls.simpleName
         return renderer
     }
@@ -207,9 +235,9 @@ class BaseRunner implements Runner {
         def renderers = getRenderers()
         if (!renderers) return null
 
-        renderers[module.targetContentType] ?:
-        renderers[module.targetContentType?.replaceFirst('/.*', '/*')] ?:
-        renderers[module.targetContentType?.replaceFirst('[^/]*/', '*/')] ?:
+        renderers[type] ?:
+        renderers[type?.replaceFirst('/.*', '/*')] ?:
+        renderers[type?.replaceFirst('[^/]*/', '*/')] ?:
         renderers.'*/*'
     }
 

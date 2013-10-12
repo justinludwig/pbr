@@ -11,16 +11,44 @@ class BaseRunnerSpec extends Specification {
 
     def runner = new BaseRunner(new BaseLoader())
 
-    /*
-    def "renderers with no config is empty"() {
-        expect: runner.renderers == [:]
+    def "renderers with default config loads default renderers"() {
+        expect:
+        runner.renderers.'*/*'.name == 'DefaultRenderer'
+        runner.renderers.'image/*'.name == 'ImageRenderer'
+        runner.renderers.'text/css'.name == 'StyleRenderer'
+        runner.renderers.'text/javascript'.name == 'ScriptRenderer'
+        runner.renderers.'text/*'.name == 'TextRenderer'
+        runner.renderers.'*/*'.runner == runner
+        runner.renderers.size() == 5
     }
-    */
 
 
 
-    // todo: test loading renderers
-    // todo: test getRendererForContentType
+    def "default renderer for null type"() {
+        expect: runner.getRendererForContentType(null).name == 'DefaultRenderer'
+    }
+
+    def "default renderer for empty type"() {
+        expect: runner.getRendererForContentType('').name == 'DefaultRenderer'
+    }
+
+    def "default renderer for unknown type"() {
+        expect: runner.getRendererForContentType('foo/bar').name == 'DefaultRenderer'
+    }
+
+    def "text renderer for any xml"() {
+        when: runner.loader.config.contentType.toRenderer.'*/xml' = 
+            'com.pitchstone.plugin.pbr.run.renderer.TextRenderer'
+        then: runner.getRendererForContentType('foo/xml').name == 'TextRenderer'
+    }
+
+    def "text renderer for any text"() {
+        expect: runner.getRendererForContentType('text/x-foo').name == 'TextRenderer'
+    }
+
+    def "style renderer for css"() {
+        expect: runner.getRendererForContentType('text/css').name == 'StyleRenderer'
+    }
 
 
 
@@ -140,24 +168,294 @@ class BaseRunnerSpec extends Specification {
         module.params == [media: 'print']
     }
 
-    def "inline content with string requires adds module and specified requirements"() {
+    def "inline content with string requires adds module and connects requirements"() {
         setup:
+        runner.loader.modules = [
+            foo: new BaseModule(id: 'foo'),
+            bar: new BaseModule(id: 'bar'),
+        ]
         def request = [:]
+
         when:
-        runner.inline request, 'foo', requires: 'bar, baz'
+        runner.inline request, 'baz', requires: 'foo, bar'
+
         then:
+        runner.getRequiredModuleIds(request) as List == ['generated1']
         runner.getInlineModules(request).keySet() as List == ['generated1']
-        runner.getRequiredModuleIds(request) as List == ['bar', 'baz', 'generated1']
+        runner.getInlineModules(request).generated1.requires*.id == ['foo', 'bar']
     }
 
-    def "inline content with list requires adds module and specified requirements"() {
+    def "inline content with list requires adds module and connects requirements"() {
+        setup:
+        runner.loader.modules = [
+            foo: new BaseModule(id: 'foo'),
+            bar: new BaseModule(id: 'bar'),
+        ]
+        def request = [:]
+
+        when:
+        runner.inline request, 'baz', requires: ['foo', 'bar']
+
+        then:
+        runner.getRequiredModuleIds(request) as List == ['generated1']
+        runner.getInlineModules(request).keySet() as List == ['generated1']
+        runner.getInlineModules(request).generated1.requires*.id == ['foo', 'bar']
+    }
+
+    def "inline content with requires adds only one copy of each requirement"() {
+        setup:
+        runner.loader.modules = [
+            foo: new BaseModule(id: 'foo'),
+            bar: new BaseModule(id: 'bar'),
+        ]
+        runner.loader.modules.with { bar.requires = [ foo ] }
+        def request = [:]
+
+        when:
+        runner.inline request, 'baz', requires: 'foo, bar, foo'
+
+        then:
+        runner.getRequiredModuleIds(request) as List == ['generated1']
+        runner.getInlineModules(request).keySet() as List == ['generated1']
+        runner.getInlineModules(request).generated1.requires*.id == ['foo', 'bar']
+    }
+
+
+
+    def "render null renders nothing"() {
         setup:
         def request = [:]
+        def out = new StringWriter()
+
         when:
-        runner.inline request, 'foo', requires: ['bar', 'baz']
+        runner.render request, out, null
+
         then:
-        runner.getInlineModules(request).keySet() as List == ['generated1']
-        runner.getRequiredModuleIds(request) as List == ['bar', 'baz', 'generated1']
+        out.toString() == ''
+    }
+
+    def "render undefined modules renders nothing"() {
+        setup:
+        def log = []
+        runner.loader.log.metaClass.warn = { log << it }
+        def request = [:]
+        def out = new StringWriter()
+
+        when:
+        runner.render request, out, 'foo, bar, baz'
+
+        then:
+        out.toString() == ''
+        log == """
+            no PBR modules configured
+            no module found for required id foo
+            no module found for required id bar
+            no module found for required id baz
+        """.trim().split(/\n/).collect { it.trim() }
+    }
+
+    def "render single module by id string renders module"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
+
+        def out = new StringWriter()
+
+        when:
+        runner.render request, out, 'foo'
+
+        then:
+        out.toString() == 'x'
+    }
+
+    def "render multiple modules by id string renders modules"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
+        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain'
+
+        def out = new StringWriter()
+
+        when:
+        runner.render request, out, 'foo , bar,baz'
+
+        then:
+        out.toString() == 'xyz'
+    }
+
+    def "render multiple modules by id list renders modules"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
+        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain'
+
+        def out = new StringWriter()
+
+        when:
+        runner.render request, out, ['foo', 'bar', 'baz']
+
+        then:
+        out.toString() == 'xyz'
+    }
+
+    def "render modules renders module only once"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
+        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain',
+            requires: 'foo, bar'
+
+        def out = new StringWriter()
+
+        when:
+        runner.render request, out, 'baz'
+        runner.render request, out, 'foo'
+        runner.render request, out, 'bar'
+        runner.render request, out, 'foo, bar, baz'
+
+        then:
+        out.toString() == 'xyz'
+    }
+
+
+
+    def "render head with nothing required renders nothing"() {
+        setup:
+        def request = [:]
+        def out = new StringWriter()
+
+        when:
+        runner.renderHead request, out
+
+        then:
+        out.toString() == ''
+    }
+
+    def "render head with no head dispositions renders nothing"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x'
+        runner.inline request, 'y'
+        runner.inline request, 'z'
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderHead request, out
+
+        then:
+        out.toString() == ''
+    }
+
+    def "render head with all head dispositions renders all"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', disposition: Module.HEAD, targetContentType: 'text/plain'
+        runner.inline request, 'y', disposition: Module.HEAD, targetContentType: 'text/plain'
+        runner.inline request, 'z', disposition: Module.HEAD, targetContentType: 'text/plain'
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderHead request, out
+
+        then:
+        out.toString() == 'xyz'
+    }
+
+    def "render head renders head modules only once"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
+        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain',
+            requires: 'foo, bar', disposition: Module.HEAD
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderHead request, out
+
+        then:
+        out.toString() == 'xyz'
+    }
+
+
+
+    def "render foot with nothing required renders nothing"() {
+        setup:
+        def request = [:]
+        def out = new StringWriter()
+
+        when:
+        runner.renderFoot request, out
+
+        then:
+        out.toString() == ''
+    }
+
+    def "render foot with no un-rendered modules renders nothing"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x'
+        runner.inline request, 'y'
+        runner.inline request, 'z'
+
+        (1..3).each { runner.getRenderedModuleIds(request) << "generated$it".toString() }
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderFoot request, out
+
+        then:
+        out.toString() == ''
+    }
+
+    def "render foot with all foot dispositions renders all"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', targetContentType: 'text/plain'
+        runner.inline request, 'y', targetContentType: 'text/plain'
+        runner.inline request, 'z', targetContentType: 'text/plain'
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderFoot request, out
+
+        then:
+        out.toString() == 'xyz'
+    }
+
+    def "render foot renders foot modules only once"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'a', id: 'head1', targetContentType: 'text/plain'
+        runner.inline request, 'b', id: 'head2', targetContentType: 'text/plain'
+        runner.inline request, 'c', id: 'head3', targetContentType: 'text/plain',
+            requires: 'head1, head2', disposition: Module.HEAD
+        runner.inline request, 'i', id: 'foo', targetContentType: 'text/plain'
+        runner.inline request, 'j', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'k', id: 'baz', targetContentType: 'text/plain',
+            requires: 'foo, bar, head2, head3'
+        runner.inline request, 'x', id: 'foot1', targetContentType: 'text/plain'
+        runner.inline request, 'y', id: 'foot2', targetContentType: 'text/plain'
+        runner.inline request, 'z', id: 'foot3', targetContentType: 'text/plain',
+            requires: 'foot1, foot2, head2, head3, bar, baz'
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderHead request, out
+        runner.render request, out, 'baz'
+        runner.renderFoot request, out
+
+        then:
+        out.toString() == 'abcijkxyz'
     }
 
 
@@ -215,17 +513,13 @@ class BaseRunnerSpec extends Specification {
 
     def "all calculated modules when specified module requires non-specified modules"() {
         setup:
-        runner.loader.modules = [
-            foo: new BaseModule(id: 'foo'),
-            bar: new BaseModule(id: 'bar'),
-            baz: new BaseModule(id: 'baz'),
-        ]
-        runner.loader.modules.with { foo.requires = [ bar, baz ] }
-
         def request = [:]
+        runner.inline request, 'x', id: 'foo'
+        runner.inline request, 'y', id: 'bar'
+        runner.inline request, 'z', id: 'baz', requires: 'foo, bar'
 
         expect:
-        runner.calculateModules(request, ['foo'])*.id == ['bar', 'baz', 'foo']
+        runner.calculateModules(request, ['baz'])*.id == ['foo', 'bar', 'baz']
     }
 
     def "all calculated modules even when specified modules do not match foot pattern"() {

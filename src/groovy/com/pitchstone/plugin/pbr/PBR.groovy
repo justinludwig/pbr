@@ -37,8 +37,8 @@ class PBR {
             toRenderer: [
                 '*/*': 'com.pitchstone.plugin.pbr.run.renderer.DefaultRenderer',
                 'image/*': 'com.pitchstone.plugin.pbr.run.renderer.ImageRenderer',
-                'text/css': 'com.pitchstone.plugin.pbr.run.renderer.CssRenderer',
-                'text/javascript': 'com.pitchstone.plugin.pbr.run.renderer.JavascriptRenderer',
+                'text/css': 'com.pitchstone.plugin.pbr.run.renderer.StyleRenderer',
+                'text/javascript': 'com.pitchstone.plugin.pbr.run.renderer.ScriptRenderer',
                 'text/*': 'com.pitchstone.plugin.pbr.run.renderer.TextRenderer',
             ],
         ],
