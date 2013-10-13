@@ -1,6 +1,7 @@
 package com.pitchstone.plugin.pbr
 
 import com.pitchstone.plugin.pbr.build.base.BaseBuilder
+import com.pitchstone.plugin.pbr.load.base.BaseLoader
 
 /**
  * Build-time PBR helper.
@@ -42,12 +43,34 @@ class PBR {
                 'text/*': 'com.pitchstone.plugin.pbr.run.renderer.TextRenderer',
             ],
         ],
-        manifest: 'target/pre-built-resources.json',
+        manifest: 'target/pbr-modules.txt',
         targetDir: 'target/static',
     ]
 
     static process(Map config = [:]) {
-        new BaseBuilder(config).processAll()
+        def loader = new BaseLoader(config)
+        new BaseBuilder(loader).processAll()
+        loader.saveModules()
     }
+
+    static process(Class config, String env = 'production') {
+        process new ConfigSlurper(env).parse(config)
+    }
+
+    static process(String config, String env = 'production') {
+        if (config.indexOf(':') < 4)
+            config = "file:$config"
+        process new ConfigSlurper(env).parse(new URL(config))
+    }
+
+    static Map testConfig = {
+        def tmp = System.getProperty('java.io.tmpdir') + '/pbr-test'
+        BASE_CONFIG + [
+            manifest: "$tmp/modules.txt",
+            sourceDir: "$tmp/source",
+            targetDir: "$tmp/target",
+            workingDir: "$tmp/work",
+        ]
+    }()
 
 }

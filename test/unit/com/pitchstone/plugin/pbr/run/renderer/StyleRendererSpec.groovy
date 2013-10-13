@@ -1,5 +1,6 @@
 package com.pitchstone.plugin.pbr.run.renderer
 
+import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import com.pitchstone.plugin.pbr.run.base.BaseRunner
@@ -8,7 +9,7 @@ import spock.lang.Specification
 class StyleRendererSpec extends Specification {
 
     def renderer = new StyleRenderer(name: 'test-renderer',
-        runner: new BaseRunner(new BaseLoader()))
+        runner: new BaseRunner(new BaseLoader(PBR.testConfig)))
 
     def "render href-less link tag with empty module"() {
         setup: def out = new StringWriter()

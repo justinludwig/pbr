@@ -1,5 +1,13 @@
 // configuration for plugin testing - will not be included in the plugin zip
 
+def slurper = new ConfigSlurper(grails.util.Environment.current.name)
+
+// pulls in the configuration defined in TestPbrConfig
+// prefixed with 'grails.plugins.preBuiltResources'
+grails.plugins.preBuiltResources.merge slurper.parse(TestPbrConfig)
+
+grails.app.context = '/'
+
 log4j = {
     // Example of changing the log pattern for the default console
     // appender:

@@ -18,6 +18,21 @@ class BaseLoader implements Loader {
     List<Pattern> headPatterns
     List<Pattern> footPatterns
 
+    List<String> modulePropertiesToSave = '''
+        targetContent
+        sourceUrl
+        targetUrl
+        builtUrl
+        sourceContentType
+        targetContentType
+        builtContentType
+        disposition
+        cacheControl
+        etag
+        lastModified
+        quality
+    '''.trim().split(/\s+/)
+
     protected Map<String,String> moduleRequirements
 
     BaseLoader() {
@@ -43,7 +58,7 @@ class BaseLoader implements Loader {
         }
 
         // drill down if specified config is namespaced
-        if (!config.grails.plugins.preBuiltResources.isEmpty())
+        if (config.grails.plugins.preBuiltResources)
             config = config.grails.plugins.preBuiltResources
 
         // merge specified config into base config
@@ -68,14 +83,51 @@ class BaseLoader implements Loader {
 
     Map<String,Module> getModules() {
         if (modules == null)
-            loadModules()
+            loadModuleDefinitions()
         return modules
+    }
+
+    void loadModules(String file = null) {
+        if (!file) file = config.manifest
+        if (!new File(file).exists())
+            throw new IOException("$file does not exist")
+
+        config.module.definitions = new ConfigObject(new URL("file:$file"))
+        loadModuleDefinitions()
+    }
+
+    void saveModules(String file = null) {
+        if (!file) file = config.manifest
+
+        def definitions = getModules().inject(new ConfigObject()) { all, entry ->
+            all[entry.key] = saveModuleDefinition(entry.value); all
+        }
+
+        new File(file).with {
+            parentFile.mkdirs()
+            withWriter { definitions.writeTo it }
+        }
     }
 
     // impl
 
-    void loadModules() {
-        loadModuleDefinitions()
+    ConfigObject saveModuleDefinition(Module module) {
+        def dfn = new ConfigObject()
+
+        // copy standard properties
+        modulePropertiesToSave.findAll {
+            module.hasProperty(it) && module[it]
+        }.each {
+            dfn[it] = module[it]
+        }
+
+        // copy custom properties
+        dfn.putAll module.params
+
+        // serialize requires as list of ids
+        dfn.requires = module.requires.collect { it.id }.join(' ') ?: ' '
+
+        return dfn        
     }
 
     void loadModuleDefinitions() {
@@ -95,7 +147,7 @@ class BaseLoader implements Loader {
 
         if (props instanceof Map) {
             // is a module definition
-            if (props.url || props.submodules) {
+            if (props.url || props.submodules || props.requires) {
                 // create module from properties
                 def p = [:]
                 if (parentProps)
@@ -144,7 +196,7 @@ class BaseLoader implements Loader {
 
     List<String> concatModuleRequirements(Object... reqs) {
         reqs.findAll { it }.collect { req ->
-            (req instanceof Collection) ? req : (req as String)?.split(/\s+/)
+            (req instanceof Collection) ? req : (req as String)?.split(/[\s,]+/)
         }.flatten().collect { it?.trim() }.findAll { it }.unique()
     }
 

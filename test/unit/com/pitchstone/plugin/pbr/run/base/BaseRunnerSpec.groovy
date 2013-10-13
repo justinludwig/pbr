@@ -1,5 +1,6 @@
 package com.pitchstone.plugin.pbr.run.base
 
+import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.load.Loader
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
@@ -9,7 +10,7 @@ import spock.lang.Specification
 
 class BaseRunnerSpec extends Specification {
 
-    def runner = new BaseRunner(new BaseLoader())
+    def runner = new BaseRunner(new BaseLoader(PBR.testConfig))
 
     def "renderers with default config loads default renderers"() {
         expect:

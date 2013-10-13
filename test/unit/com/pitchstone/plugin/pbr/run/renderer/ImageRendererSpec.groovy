@@ -1,5 +1,6 @@
 package com.pitchstone.plugin.pbr.run.renderer
 
+import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
@@ -9,7 +10,7 @@ import spock.lang.Specification
 class ImageRendererSpec extends Specification {
 
     def renderer = new ImageRenderer(name: 'test-renderer',
-        runner: new BaseRunner(new BaseLoader()))
+        runner: new BaseRunner(new BaseLoader(PBR.testConfig)))
 
     def "render empty img tag with empty module"() {
         setup: def out = new StringWriter()

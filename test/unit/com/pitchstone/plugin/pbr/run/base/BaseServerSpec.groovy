@@ -1,12 +1,13 @@
 package com.pitchstone.plugin.pbr.run.base
 
+import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import spock.lang.Specification
 
 class BaseServerSpec extends Specification {
 
-    def server = new BaseRunner(new BaseLoader())
+    def server = new BaseRunner(new BaseLoader(PBR.testConfig))
 
     def "module found for target url"() {
         setup:

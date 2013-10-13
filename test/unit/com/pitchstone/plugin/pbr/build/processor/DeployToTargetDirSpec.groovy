@@ -1,5 +1,6 @@
 package com.pitchstone.plugin.pbr.build.processor
 
+import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.build.base.BaseBuilder
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
@@ -8,7 +9,7 @@ import spock.lang.Specification
 class DeployToTargetDirSpec extends Specification {
 
     def processor = new DeployToTargetDir(name: 'test-processor',
-        builder: new BaseBuilder(new BaseLoader()))
+        builder: new BaseBuilder(new BaseLoader(PBR.testConfig)))
     def targetDir = new File(config.targetDir)
 
     def setup() {

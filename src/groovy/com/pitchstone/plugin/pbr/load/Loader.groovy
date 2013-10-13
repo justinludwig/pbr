@@ -35,6 +35,28 @@ interface Loader {
     Module getModuleForTargetUrl(String url)
 
     /**
+     * Loads the saved modules from the default manifest file.
+     */
+    void loadModules()
+
+    /**
+     * Loads the saved modules from the specified manifest file.
+     * @param file Path to manifiest file, or null/empty for default manifest.
+     */
+    void loadModules(String file)
+
+    /**
+     * Saves the loaded modules to the default manifest file.
+     */
+    void saveModules()
+
+    /**
+     * Saves the loaded modules to the specified manifest file.
+     * @param file Path to manifiest file, or null/empty for default manifest.
+     */
+    void saveModules(String file)
+
+    /**
      * Ordered list of module-id patterns of modules that should be rendered
      * in the page head.
      */

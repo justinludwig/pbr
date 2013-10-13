@@ -38,7 +38,7 @@ class BaseRunner implements Runner {
         if (request == null || !modules) return
 
         if (!(modules instanceof Collection))
-            modules = modules.toString().split(/\s*,\s*/)
+            modules = modules.toString().split(/[\s,]+/)
 
         getRequiredModuleIds(request).addAll modules.findAll { it.trim() }
     }
@@ -61,7 +61,7 @@ class BaseRunner implements Runner {
         if (request == null || !modules) return
 
         if (!(modules instanceof Collection))
-            modules = modules.toString().split(/\s*,\s*/) as List
+            modules = modules.toString().split(/[\s,]+/) as List
 
         def rendered = getRenderedModuleIds(request)
         calculateModules(request, modules).each { module ->
@@ -189,7 +189,7 @@ class BaseRunner implements Runner {
         if (!requires) return []
 
         if (!(requires instanceof Collection))
-            requires = requires.toString().split(/\s*,\s*/)
+            requires = requires.toString().split(/[\s,]+/)
         
         def inline = getInlineModules(request)
         def modules = [] as Set
@@ -219,7 +219,7 @@ class BaseRunner implements Runner {
     }
 
     Renderer loadRenderer(String dfn) {
-        def parts = dfn.split(/\s+/)
+        def parts = dfn.split(/[\s,]+/)
         def cls = Thread.currentThread().contextClassLoader.loadClass(parts[0])
         def renderer = cls.newInstance()
 

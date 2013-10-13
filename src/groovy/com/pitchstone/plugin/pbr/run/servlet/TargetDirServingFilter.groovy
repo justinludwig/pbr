@@ -29,13 +29,20 @@ class TargetDirServingFilter implements Filter {
 
         try {
             preBuildResourcesService.runner.serve request, response
-        } catch (e) {
+
+        } catch (Throwable e) {
             try {
                 preBuildResourcesService.loader.log.error(
                     "error serving $request.requestURL", e)
-            } catch (ee) {
-                throw new ServletException(e)
+            } catch (Throwable ee) {
+                e.printStackTrace()
+                ee.printStackTrace()
             }
+            if (e instanceof IOException)
+                throw (IOException) e
+            if (e instanceof ServletException)
+                throw (ServletException) e
+            throw new ServletException(e)
         }
 
         if (!response.committed)

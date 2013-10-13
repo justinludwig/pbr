@@ -1,7 +1,5 @@
 package com.pitchstone.plugin.pbr.run.base
 
-import com.pitchstone.plugin.pbr.load.base.BaseLoader
-import com.pitchstone.plugin.pbr.load.base.BaseModule
 import spock.lang.Specification
 
 class BaseRendererToolsSpec extends Specification {

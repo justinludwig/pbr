@@ -1,12 +1,26 @@
 package com.pitchstone.plugin.pbr.load.base
 
+import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.load.Loader
+import com.pitchstone.plugin.pbr.load.base.BaseModule
 import java.util.regex.Pattern
 import spock.lang.Specification
 
 class BaseLoaderSpec extends Specification {
 
-    def loader = new BaseLoader()
+    def loader = new BaseLoader(PBR.testConfig)
+
+    List<String> stringModuleProperties = '''
+        targetContent
+        sourceUrl
+        targetUrl
+        builtUrl
+        sourceContentType
+        targetContentType
+        builtContentType
+        disposition
+        etag
+    '''.trim().split(/\s+/)
 
     def "getModules with no config returns empty map"() {
         expect: loader.modules == [:]
@@ -390,6 +404,81 @@ class BaseLoaderSpec extends Specification {
 
 
 
+    def "empty modules are saved"() {
+        when:
+        loader.saveModules()
+        loader.modules.jquery = new BaseModule()
+        loader.loadModules()
+        then:
+        loader.modules == [:]
+    }
+
+    def "a simple module is saved"() {
+        when:
+        loader.config.module.definition.jquery = 'js/jquery.js'
+        loader.saveModules()
+        loader.modules = [:]
+        loader.loadModules()
+        then:
+        loader.modules.size() == 1
+        loader.modules.jquery
+        loader.modules.jquery.sourceUrl == 'js/jquery.js'
+        loader.modules.jquery.targetUrl == 'js/jquery.js'
+        loader.modules.jquery.params == [:]
+    }
+
+    def "a complex module is saved"() {
+        when:
+        loader.config.module.definition.'x/x' =
+            stringModuleProperties.inject([:]) { m,i -> m[i] = 'x'; m } + [
+                cacheControl: [foo:'bar'],
+                lastModified: new Date(0),
+                quality: 0.123f,
+                title: '<\\\'/> \u00ae',
+                requires : ' ',
+            ]
+        loader.saveModules()
+        loader.modules = [:]
+        loader.loadModules()
+        then:
+        loader.modules.size() == 1
+        loader.modules.'x/x'
+        stringModuleProperties.each {
+            assert loader.modules.'x/x'[it] == 'x'
+        }
+        loader.modules.'x/x'.cacheControl == [foo:'bar']
+        loader.modules.'x/x'.lastModified == new Date(0)
+        loader.modules.'x/x'.quality == 0.123f
+        loader.modules.'x/x'.params == [title:'<\\\'/> \u00ae']
+    }
+
+    def "modules with requirements are saved"() {
+        when:
+        loader.config.module.definition = [
+            app: [
+                requires: 'jquery-ui',
+                url: 'js/app.js',
+            ],
+            jquery: 'js/jquery.js',
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
+            ],
+        ]
+        loader.saveModules()
+        loader.modules = [:]
+        loader.loadModules()
+        then:
+        loader.modules.size() == 3
+        loader.modules.jquery.requires.empty
+        loader.modules.'jquery-ui'.requires.size() == 1
+        loader.modules.app.requires.size() == 2
+        'jquery' in loader.modules.app.requires.collect { it.id }
+        'jquery-ui' in loader.modules.app.requires.collect { it.id }
+    }
+
+
+
     def "no head patterns when not configured"() {
         expect: loader.headPatterns == []
     }
@@ -483,6 +572,5 @@ class BaseLoaderSpec extends Specification {
             Pattern.quote('x') + '.*' + Pattern.quote('x'),
         ]
     }
-
 
 }
