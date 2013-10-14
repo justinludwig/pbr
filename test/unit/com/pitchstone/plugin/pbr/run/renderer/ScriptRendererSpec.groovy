@@ -1,15 +1,16 @@
 package com.pitchstone.plugin.pbr.run.renderer
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import com.pitchstone.plugin.pbr.run.base.BaseRunner
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class ScriptRendererSpec extends Specification {
 
     def renderer = new ScriptRenderer(name: 'test-renderer',
-        runner: new BaseRunner(new BaseLoader(PBR.testConfig)))
+        runner: new BaseRunner(new BaseLoader(testConfig)))
 
     def "render empty script tag with empty module"() {
         setup: def out = new StringWriter()

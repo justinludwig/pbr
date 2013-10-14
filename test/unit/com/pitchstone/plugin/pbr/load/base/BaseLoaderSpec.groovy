@@ -1,14 +1,15 @@
 package com.pitchstone.plugin.pbr.load.base
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.load.Loader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import java.util.regex.Pattern
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class BaseLoaderSpec extends Specification {
 
-    def loader = new BaseLoader(PBR.testConfig)
+    def loader = new BaseLoader(testConfig)
 
     List<String> stringModuleProperties = '''
         targetContent

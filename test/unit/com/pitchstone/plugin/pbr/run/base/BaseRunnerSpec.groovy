@@ -1,6 +1,6 @@
 package com.pitchstone.plugin.pbr.run.base
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.load.Loader
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
@@ -8,9 +8,10 @@ import com.pitchstone.plugin.pbr.load.base.BaseModule
 import java.util.regex.Pattern
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class BaseRunnerSpec extends Specification {
 
-    def runner = new BaseRunner(new BaseLoader(PBR.testConfig))
+    def runner = new BaseRunner(new BaseLoader(testConfig))
 
     def "renderers with default config loads default renderers"() {
         expect:

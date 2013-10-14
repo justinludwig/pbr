@@ -1,13 +1,14 @@
 package com.pitchstone.plugin.pbr.run.base
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class BaseServerSpec extends Specification {
 
-    def server = new BaseRunner(new BaseLoader(PBR.testConfig))
+    def server = new BaseRunner(new BaseLoader(testConfig))
 
     def "module found for target url"() {
         setup:
@@ -240,60 +241,8 @@ class BaseServerSpec extends Specification {
         response.outputStream.toString() == 'foo'
     }
 
-
-    protected String nonExistantPath = '/this/path/should-not-exist'
-
-    protected File getTempFile(String suffix = null, String text = null) {
-        def file = File.createTempFile('pbr-test', suffix)
-        file.deleteOnExit()
-        if (text)
-            file.text = text
-        return file
-    }
-
-    protected getMockResponse() {
-        def status = []
-        def headers = [:]
-        [
-            status: status,
-            sendError: { int code ->
-                status << code
-            },
-
-            outputStream: new ByteArrayOutputStream(),
-            flushBuffer: { -> },
-
-            headers: headers,
-            setHeader: { String name, String value ->
-                headers[name] = value
-            },
-            setDateHeader: { String name, long value ->
-                headers[name] = value
-            },
-
-            /*
-            setProperty: { String name, Object value ->
-                name = name.replaceAll(/([A-Z])/, '-$1').
-                    replaceFirst(/^[a-z]/) { it.toUpperCase() }
-                headers[name] = value
-                return
-            },
-            setContentLength: { int value ->
-                headers.'Content-Length' = value
-            },
-            setContentType: { String value ->
-                headers.'Content-Type' = value
-            },
-            */
-        ] as Expando
-    }
-
     protected getMockLog() {
-        def log = []
-        server.loader.log.metaClass.info = { log << it }
-        server.loader.log.metaClass.warn = { log << it }
-        server.loader.log.metaClass.error = { log << it }
-        return log
+        mockLogForLoader server.loader
     }
 
 }

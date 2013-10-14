@@ -1,10 +1,11 @@
 package com.pitchstone.plugin.pbr.build.base
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class BaseProcessorToolsSpec extends Specification {
 
     def tools = new BaseProcessorTools()
@@ -179,7 +180,7 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "the extension is found for a css extension"() {
-        setup: tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         expect: tools.getExtensionFromContentType('text/css') == 'css'
     }
 
@@ -194,19 +195,19 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "the content-type is found for a css url"() {
-        setup: tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         expect: tools.getContentType('foo.css') == 'text/css'
     }
 
     def "the calculate function gets first dibs on determining the content-type of a url"() {
-        setup: tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig + [
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
             contentType: [ calculate: { 'example/foo' } ],
         ]))
         expect: tools.getContentType('foo.css') == 'example/foo'
     }
 
     def "the calculate function can skip determining the content-type of a url"() {
-        setup: tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig + [
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
             contentType: [ calculate: { '' } ],
         ]))
         expect: tools.getContentType('foo.css') == 'text/css'
@@ -220,7 +221,7 @@ class BaseProcessorToolsSpec extends Specification {
 
     def "working dir uses default if custom dir cannot be created"() {
         setup: 
-        tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig + [
+        tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
             workingDir: nonExistantPath,
         ]))
         def log = []
@@ -318,7 +319,7 @@ class BaseProcessorToolsSpec extends Specification {
 
     def "will create working file for module with no built url and existing source url"() {
         setup: 
-        tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('no-ext', 'test')
         def module = new BaseModule(
             sourceUrl: sourceFile.path,
@@ -336,7 +337,7 @@ class BaseProcessorToolsSpec extends Specification {
 
     def "will create working file with content type's extension for extensionless source url and source content-type"() {
         setup: 
-        tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('no-ext', 'test')
         def module = new BaseModule(
             sourceUrl: sourceFile.path,
@@ -355,7 +356,7 @@ class BaseProcessorToolsSpec extends Specification {
 
     def "will create working file with content-type's extension for different-extension source url and source content-type"() {
         setup: 
-        tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('foo.txt', 'test')
         def module = new BaseModule(
             id: 'bar',
@@ -375,7 +376,7 @@ class BaseProcessorToolsSpec extends Specification {
 
     def "will create working file with url's extension for source url with extension"() {
         setup: 
-        tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('foo.css', 'test')
         def module = new BaseModule(
             id: 'bar',
@@ -414,7 +415,7 @@ class BaseProcessorToolsSpec extends Specification {
 
     def "will create working file with content type's extension for extensionless http source url and source content-type"() {
         setup: 
-        tools.builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+        tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def module = new BaseModule(
             sourceUrl: '//google.com/',
             sourceContentType: 'text/html',
@@ -428,18 +429,5 @@ class BaseProcessorToolsSpec extends Specification {
         module.builtUrl == workingFile.path
         module.builtContentType == 'text/html'
     }
-
-
-
-    protected String nonExistantPath = '/this/path/should-not-exist'
-
-    protected File getTempFile(String suffix = null, String text = null) {
-        def file = File.createTempFile('pbr-test', suffix)
-        file.deleteOnExit()
-        if (text)
-            file.text = text
-        return file
-    }
-
 
 }

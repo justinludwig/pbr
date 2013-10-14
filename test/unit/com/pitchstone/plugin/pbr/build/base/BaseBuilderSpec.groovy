@@ -1,12 +1,13 @@
 package com.pitchstone.plugin.pbr.build.base
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class BaseBuilderSpec extends Specification {
 
-    def builder = new BaseBuilder(new BaseLoader(PBR.testConfig))
+    def builder = new BaseBuilder(new BaseLoader(testConfig))
 
     def "getProcessors with no config returns empty list"() {
         expect: builder.processors == []

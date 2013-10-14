@@ -1,15 +1,16 @@
 package com.pitchstone.plugin.pbr.build.processor
 
-import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.PbrTestHelper
 import com.pitchstone.plugin.pbr.build.base.BaseBuilder
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
 import spock.lang.Specification
 
+@Mixin(PbrTestHelper)
 class FillInLastModifiedSpec extends Specification {
 
     def processor = new FillInLastModified(name: 'test-processor',
-        builder: new BaseBuilder(new BaseLoader(PBR.testConfig)))
+        builder: new BaseBuilder(new BaseLoader(testConfig)))
 
     def "process with empty module does nothing"() {
         setup:

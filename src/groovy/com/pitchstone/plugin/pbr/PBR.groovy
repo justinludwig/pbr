@@ -44,7 +44,9 @@ class PBR {
             ],
         ],
         manifest: 'target/pbr-modules.txt',
+        sourceDir: 'web-app',
         targetDir: 'target/static',
+        // workingDir: "${System.properties.'java.io.tmpdir'}/pbr",
     ]
 
     static process(Map config = [:]) {
@@ -63,8 +65,11 @@ class PBR {
         process new ConfigSlurper(env).parse(new URL(config))
     }
 
+    /**
+     * Default config for unit tests.
+     */
     static Map testConfig = {
-        def tmp = System.getProperty('java.io.tmpdir') + '/pbr-test'
+        def tmp = "${System.properties.'java.io.tmpdir'}/pbr-test"
         BASE_CONFIG + [
             manifest: "$tmp/modules.txt",
             sourceDir: "$tmp/source",
