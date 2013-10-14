@@ -18,6 +18,9 @@ class BaseProcessorTools implements ProcessorTools {
     }
 
     File getLocalFile(String url) {
+        // prefix relative paths with sourceDir
+        if (!(url ==~ '/.*') && config?.sourceDir)
+            url = "${config.sourceDir}/${url?:''}"
         new File(url ?: '')
     }
 
@@ -89,7 +92,7 @@ class BaseProcessorTools implements ProcessorTools {
     File getWorkingFile(Module module) {
         // working file already built, return it
         if (module.builtUrl)
-            return getLocalFile(module.builtUrl)
+            return new File(module.builtUrl)
 
         // build new working file
         def url = module.sourceUrl, contentType = module.sourceContentType

@@ -84,6 +84,96 @@ class BaseProcessorToolsSpec extends Specification {
 
 
 
+    def "local file for null without sourceDir is current dir"() {
+        expect: tools.getLocalFile(null) == new File('')
+    }
+
+    def "local file for null with sourceDir is source dir"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile(null) == new File('src')
+    }
+
+    def "local file for empty string without sourceDir is current dir"() {
+        expect: tools.getLocalFile('') == new File('')
+    }
+
+    def "local file for empty string with sourceDir is source dir"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('') == new File('src')
+    }
+
+    def "local file for simple name without sourceDir is same file"() {
+        expect: tools.getLocalFile('foo') == new File('foo')
+    }
+
+    def "local file for simple name with sourceDir is prefixed file"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('foo') == new File('src/foo')
+    }
+
+    def "local file for one-dir relative path without sourceDir is same file"() {
+        expect: tools.getLocalFile('foo/bar.txt') == new File('foo/bar.txt')
+    }
+
+    def "local file for one-dir relative path with sourceDir is prefixed file"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('foo/bar.txt') == new File('src/foo/bar.txt')
+    }
+
+    def "local file for two-dir relative path without sourceDir is same file"() {
+        expect: tools.getLocalFile('foo/bar/baz.txt') == new File('foo/bar/baz.txt')
+    }
+
+    def "local file for two-dir relative path with sourceDir is prefixed file"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('foo/bar/baz.txt') == new File('src/foo/bar/baz.txt')
+    }
+
+    def "local file for the root dir without sourceDir is the root dir"() {
+        expect: tools.getLocalFile('/') == new File('/')
+    }
+
+    def "local file for the root dir with sourceDir is the root dir"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('/') == new File('/')
+    }
+
+    def "local file for no-dir absolute path without sourceDir is the absolute file"() {
+        expect: tools.getLocalFile('/foo.txt') == new File('/foo.txt')
+    }
+
+    def "local file for no-dir absolute path with sourceDir is the absolute file"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('/foo.txt') == new File('/foo.txt')
+    }
+
+    def "local file for one-dir absolute path without sourceDir is the absolute file"() {
+        expect: tools.getLocalFile('/foo/bar.txt') == new File('/foo/bar.txt')
+    }
+
+    def "local file for one-dir absolute path with sourceDir is the absolute file"() {
+        setup: tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
+            sourceDir: 'src',
+        ]))
+        expect: tools.getLocalFile('/foo/bar.txt') == new File('/foo/bar.txt')
+    }
+
+
+
     def "connection can be opened with an http url"() {
         expect: tools.openConnection('http://www.google.com/').responseCode == 200
     }

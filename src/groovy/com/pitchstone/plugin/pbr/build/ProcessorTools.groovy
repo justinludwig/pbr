@@ -25,7 +25,7 @@ interface ProcessorTools {
     boolean isLocalFile(String url)
 
     /**
-     * Returns file object for the specified url.
+     * Returns file object for the specified source url.
      * The file may not exist; use the file's `exist()` method to check.
      */
     File getLocalFile(String url)

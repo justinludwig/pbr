@@ -18,7 +18,7 @@ class DeployToTargetDir implements Processor {
     Builder builder
 
     void process(Module module) {
-        def srcUrl = module.builtUrl
+        def srcUrl = module.builtUrl || module.sourceUrl
         def dstUrl = module.targetUrl
         if (!srcUrl || !dstUrl) return
 
@@ -28,7 +28,7 @@ class DeployToTargetDir implements Processor {
 
         if (!builder?.tools?.isLocalFile(dstUrl)) return
 
-        def srcFile = builder.tools.getLocalFile(srcUrl)
+        def srcFile = builder.tools.getWorkingFile(module)
         def dstFile = new File(targetDir, dstUrl)
 
         // copy src to dst
