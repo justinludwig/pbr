@@ -19,6 +19,16 @@ interface ProcessorTools {
     Builder builder
 
     /**
+     * Copies the contents of the source file to the destination file.
+     */
+    void copyFile(File src, File dst)
+
+    /**
+     * Copies the contents of the source stream to the destination file.
+     */
+    void copyStream(InputStream src, File dst)
+
+    /**
      * True if the specified url denotes a local file.
      * Null, empty (''), and other scheme-less urls denote local files.
      */

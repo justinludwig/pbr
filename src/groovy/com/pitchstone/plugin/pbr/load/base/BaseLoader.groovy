@@ -3,6 +3,9 @@ package com.pitchstone.plugin.pbr.load.base
 import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.PBR
 import com.pitchstone.plugin.pbr.load.Loader
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
+import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import org.apache.log4j.Logger
 
@@ -17,23 +20,6 @@ class BaseLoader implements Loader {
     Map<String,Module> modules
     List<Pattern> headPatterns
     List<Pattern> footPatterns
-
-    List<String> modulePropertiesToSave = '''
-        targetContent
-        sourceUrl
-        targetUrl
-        builtUrl
-        sourceContentType
-        targetContentType
-        builtContentType
-        disposition
-        cacheControl
-        etag
-        lastModified
-        quality
-    '''.trim().split(/\s+/)
-
-    protected Map<String,String> moduleRequirements
 
     BaseLoader() {
         this([:])
@@ -63,6 +49,11 @@ class BaseLoader implements Loader {
 
         // merge specified config into base config
         this.config.merge(config)
+
+        // uninitialize everything else
+        modules = null
+        headPatterns = null
+        footPatterns = null
     }
 
     List<Pattern> getHeadPatterns() {
@@ -77,70 +68,127 @@ class BaseLoader implements Loader {
         return footPatterns
     }
 
+    Module getModuleForSourceUrl(String url) {
+        getModules().values().find { it.sourceUrl == url }
+    }
+
     Module getModuleForTargetUrl(String url) {
         getModules().values().find { it.targetUrl == url }
     }
 
     Map<String,Module> getModules() {
         if (modules == null)
-            loadModuleDefinitions()
+            modules = loadModuleDefinitions(config.module.definition)
         return modules
     }
 
-    void loadModules(String file = null) {
+    void load(String file = null) {
         if (!file) file = config.manifest
-        if (!new File(file).exists())
+        def manifest = new File(file)
+        if (!manifest.exists())
             throw new IOException("$file does not exist")
 
-        config.module.definitions = new ConfigObject(new URL("file:$file"))
-        loadModuleDefinitions()
+        def definitions = manifest.withReader('UTF-8') { parseJson it }
+        modules = loadModuleDefinitions(definitions)
     }
 
-    void saveModules(String file = null) {
+    void save(String file = null) {
         if (!file) file = config.manifest
+        def manifest = new File(file)
+        manifest.parentFile.mkdirs()
 
-        def definitions = getModules().inject(new ConfigObject()) { all, entry ->
-            all[entry.key] = saveModuleDefinition(entry.value); all
+        manifest.withWriter('UTF-8') { writeJson getModules(), it }
+    }
+
+    void revert() {
+        modules = null
+    }
+
+    Collection<Module> revert(Collection<Module> modules) {
+        if (!modules || this.modules == null) return
+
+        // reload all module definitions from config
+        def all = loadModuleDefinitions(config.module.definition)
+        // extract the updated modules
+        def updated = modules.inject([:]) { map, module ->
+            map[module.id] = all[module.id]; map
         }
 
-        new File(file).with {
-            parentFile.mkdirs()
-            withWriter { definitions.writeTo it }
+        // todo: allow processed modules to specify dependencies
+        // eg 'app.css' depends on 'app', or 'bundle.css' depends on 'app.css'
+
+        // remove reverted modules from the master map
+        modules.each { this.modules.remove(it.id) }
+        // add the updated modules to the master map
+        this.modules.putAll updated
+
+        // update the requires references for each module to use new module objects
+        this.modules.each { id, module ->
+            module.requires = module.requires.collect {
+                this.modules[it.id]
+            }.findAll { it }
         }
+
+        updated.values()
     }
 
     // impl
 
-    ConfigObject saveModuleDefinition(Module module) {
-        def dfn = new ConfigObject()
+    ConfigObject parseJson(Reader reader) {
+        def dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+        def json = new JsonSlurper().parse(reader)
 
-        // copy standard properties
-        modulePropertiesToSave.findAll {
-            module.hasProperty(it) && module[it]
-        }.each {
-            dfn[it] = module[it]
+        json.each { id, module ->
+            // convert date strings back to Date object
+            module.findAll { k,v ->
+                v instanceof String && v ==~ /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{4}/
+            }.each { k,v ->
+                module[k] = dateFormat.parse(v)
+            }
+            // always include non-empty 'requires' property to indicate its a module
+            if (!module.requires)
+                module.requires = ' '
         }
 
-        // copy custom properties
-        dfn.putAll module.params
-
-        // serialize requires as list of ids
-        dfn.requires = module.requires.collect { it.id }.join(' ') ?: ' '
-
-        return dfn        
+        def definition = new ConfigObject()
+        definition.putAll json
+        return definition
     }
 
-    void loadModuleDefinitions() {
-        modules = [:]
-        moduleRequirements = [:]
-        loadModuleDefinition '', config.module.definition
-        modules.values().each { resolveModuleRequirements it }
+    void writeJson(Map<String,Module> modules, Writer writer) {
+        if (!modules) {
+            writer << '{}'
+            return
+        }
 
-        if (!modules)
+        def builder = new JsonBuilder()
+        builder {
+            modules.sort { it.key }.each { id, module -> "$id" module.toJson()  }
+        }
+
+        def json = builder.toPrettyString()
+        // workaround GROOVY-5323 (fixed in 1.8.7 / 2.0-beta-3)
+        if (GroovySystem.version < '1.8.7')
+            json = json.replaceAll(/(\\|(?<! )"(?![:,\n]))/, '\\\\$1')
+        writer << json
+    }
+
+    Map<String,Module> loadModuleDefinitions(Map definitions) {
+        def state = [
+            modules: [:],
+            requirements: [:],
+            stack: [],
+        ]
+        loadModuleDefinition state, '', definitions
+        state.modules.values().each { resolveModuleRequirements state, it }
+
+        if (!state.modules)
             log.warn "no PBR modules configured"
+
+        return state.modules
     }
 
-    void loadModuleDefinition(String id, props, parentProps = null) {
+    void loadModuleDefinition(state, String id, props, parentProps = null) {
         if (!props) return
 
         def subId = { id ? "${id}.${it}" : it }
@@ -151,14 +199,16 @@ class BaseLoader implements Loader {
                 // create module from properties
                 def p = [:]
                 if (parentProps)
-                    p.putAll parentProps
-                p.id = id
-                p.putAll props
-                p.remove 'submodules'
-                p.remove 'requires'
-                modules[id] = createModule(p)
+                    p.putAll parentProps.findAll { k,v -> k != 'requires' }
 
-                moduleRequirements[id] = concatModuleRequirements(
+                p.id = id
+                p.putAll props.findAll { k,v ->
+                    // skip empty and special props
+                    v && k != 'submodules' && k != 'requires'
+                }
+                state.modules[id] = createModule(p)
+
+                state.requirements[id] = concatModuleRequirements(
                     props.requires, parentProps?.requires,
                     props.submodules?.keySet()?.collect { subId it }?.join(' '))
 
@@ -167,26 +217,28 @@ class BaseLoader implements Loader {
                     // create new parentProps from this module's props and its parent
                     def pp = [:]
                     if (parentProps)
-                        p.putAll parentProps
-                    pp.putAll props
-                    pp.remove 'submodules'
+                        pp.putAll parentProps.findAll { k,v -> k != 'requires' }
 
+                    pp.putAll props.findAll { k,v ->
+                        // skip empty and special props
+                        v && k != 'submodules'
+                    }
                     props.submodules.each { module ->
                         def moduleId = id ? "${id}.${module.key}" : module.key
-                        loadModuleDefinition subId(module.key), module.value, pp
+                        loadModuleDefinition state, subId(module.key), module.value, pp
                     }
                 }
 
             // not a module definition: load sub-modules from properties
             } else {
                 props.each { module ->
-                    loadModuleDefinition subId(module.key), module.value, parentProps
+                    loadModuleDefinition state, subId(module.key), module.value, parentProps
                 }
             }
 
         // simple definition, like "jquery = 'js/jquery.js'"
         } else {
-            loadModuleDefinition id, [url: props as String], parentProps
+            loadModuleDefinition state, id, [url: props as String], parentProps
         }
     }
 
@@ -200,14 +252,14 @@ class BaseLoader implements Loader {
         }.flatten().collect { it?.trim() }.findAll { it }.unique()
     }
 
-    Collection<Module> resolveModuleRequirements(Module module, List<String> stack = []) {
-        if (module.id in stack)
-            throw new Exception("module requirements loop: ${stack.join(' > ')} > $module.id")
+    Collection<Module> resolveModuleRequirements(state, Module module) {
+        if (module.id in state.stack)
+            throw new Exception("module requirements loop: ${state.stack.join(' > ')} > $module.id")
 
         if (!module.requires) {
             def immediateRequirements = []
-            moduleRequirements[module.id]?.each { requiredId ->
-                def required = modules[requiredId]
+            state.requirements[module.id]?.each { requiredId ->
+                def required = state.modules[requiredId]
                 if (required)
                     immediateRequirements << required
                 else
@@ -215,12 +267,13 @@ class BaseLoader implements Loader {
             }
 
             if (immediateRequirements) {
-                stack.push(module.id)
+                state.stack.push(module.id)
                 module.requires.addAll((
-                    [immediateRequirements] + 
-                    immediateRequirements.collect { resolveModuleRequirements it, stack }
+                    [immediateRequirements] + immediateRequirements.collect {
+                        resolveModuleRequirements state, it
+                    }
                 ).flatten().unique())
-                stack.pop()
+                state.stack.pop()
             }
         }
 

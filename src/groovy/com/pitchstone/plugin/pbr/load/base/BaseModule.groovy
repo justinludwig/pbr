@@ -24,6 +24,25 @@ class BaseModule implements Module {
     Collection<Module> requires = []
     Map params = [:]
 
+    Map toJson() {
+        (
+            // serialize simple properties (don't need id)
+            '''
+                targetContent sourceUrl targetUrl builtUrl
+                sourceContentType targetContentType builtContentType
+                disposition cacheControl etag lastModified quality
+            '''.trim().split(/\s+/).inject([:]) { m,i -> m[i] = this[i]; m } +
+            // serialize params as properties at same level
+            params +
+            // serialize requires as space-separated list of module ids
+            [requires: requires*.id.join(' ')]
+
+        // skip empty properties
+        ).findAll { k,v -> v }
+    }
+
+    // impl
+
     void setContent(String x) {
         if (!targetContent)
             targetContent = x

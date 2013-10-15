@@ -13,12 +13,21 @@ class ScriptRenderer implements Renderer {
     Runner runner
 
     void render(request, Writer out, Module module) {
+        def content = module.targetContent ?: ''
+        def src = content ? '' : module.targetUrl
+
+        // nothing to render
+        if (!content && !src) {
+            runner.loader.log.info "no script to render for module $module.id"
+            return
+        }
+
         out << '<script' << runner.tools.attrs(
-            src: module.targetContent ? '' : module.targetUrl,
+            src: src,
             type: !(module.targetContentType ==~ '.*javascript') ?
                 module.targetContentType : '',
             defer: module.disposition == 'defer',
-        ) << '>' << (module.targetContent ?: '') << '</script>'
+        ) << '>' << content << '</script>'
     }
 
 }

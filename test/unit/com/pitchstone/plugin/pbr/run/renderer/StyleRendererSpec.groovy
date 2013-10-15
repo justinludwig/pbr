@@ -12,10 +12,10 @@ class StyleRendererSpec extends Specification {
     def renderer = new StyleRenderer(name: 'test-renderer',
         runner: new BaseRunner(new BaseLoader(testConfig)))
 
-    def "render href-less link tag with empty module"() {
+    def "render nothing with empty module"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule()
-        then: out.toString() == '<link rel="stylesheet">'
+        then: out.toString() == ''
     }
 
     def "render content in style tag"() {

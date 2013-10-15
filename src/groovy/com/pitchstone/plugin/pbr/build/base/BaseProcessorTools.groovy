@@ -12,6 +12,16 @@ class BaseProcessorTools implements ProcessorTools {
     File workingDir
     Builder builder
 
+    void copyFile(File src, File dst) {
+        dst.parentFile.mkdirs()
+        src.withInputStream { i -> dst.withOutputStream { o -> o << i } }
+    }
+
+    void copyStream(InputStream src, File dst) {
+        dst.parentFile.mkdirs()
+        dst.withOutputStream { it << src }
+    }
+
     boolean isLocalFile(String url) {
         // local if doesn't begin with '//' and doesn't have ':' before the first '/'
         !(url ==~ '//.*|[^/]*:.*')
@@ -101,13 +111,13 @@ class BaseProcessorTools implements ProcessorTools {
 
         // copy content from source file
         if (isLocalFile(url))
-            getLocalFile(url).withInputStream { file << it }
+            copyFile getLocalFile(url), file
         else
             openConnection(url).with {
                 if (responseCode != 200)
                     throw new FileNotFoundException(
                         "$responseCode $responseMessage: $url")
-                inputStream.withStream { file << it }
+                copyStream inputStream, file
             }
 
         module.builtUrl = file.path

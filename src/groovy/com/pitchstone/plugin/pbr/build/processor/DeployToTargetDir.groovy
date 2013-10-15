@@ -32,8 +32,7 @@ class DeployToTargetDir implements Processor {
         def dstFile = new File(targetDir, dstUrl)
 
         // copy src to dst
-        dstFile.parentFile.mkdirs()
-        srcFile.withInputStream { i -> dstFile.withOutputStream { o -> o << i } }
+        builder.tools.copyFile srcFile, dstFile
 
         // copy timestamp
         dstFile.lastModified = module.lastModified?.time ?: srcFile.lastModified()

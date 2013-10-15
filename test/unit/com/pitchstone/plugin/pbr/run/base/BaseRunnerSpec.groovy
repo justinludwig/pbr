@@ -371,10 +371,12 @@ class BaseRunnerSpec extends Specification {
     def "render head renders head modules only once"() {
         setup:
         def request = [:]
-        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
-        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain',
+            disposition: Module.HEAD
+        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain',
+            disposition: Module.HEAD
         runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain',
-            requires: 'foo, bar', disposition: Module.HEAD
+            disposition: Module.HEAD, requires: 'foo, bar'
 
         def out = new StringWriter()
 
@@ -417,7 +419,7 @@ class BaseRunnerSpec extends Specification {
         out.toString() == ''
     }
 
-    def "render foot with all foot dispositions renders all"() {
+    def "render foot with all un-rendered modules renders all"() {
         setup:
         def request = [:]
         runner.inline request, 'x', targetContentType: 'text/plain'
@@ -436,10 +438,12 @@ class BaseRunnerSpec extends Specification {
     def "render foot renders foot modules only once"() {
         setup:
         def request = [:]
-        runner.inline request, 'a', id: 'head1', targetContentType: 'text/plain'
-        runner.inline request, 'b', id: 'head2', targetContentType: 'text/plain'
+        runner.inline request, 'a', id: 'head1', targetContentType: 'text/plain',
+            disposition: Module.HEAD
+        runner.inline request, 'b', id: 'head2', targetContentType: 'text/plain',
+            disposition: Module.HEAD
         runner.inline request, 'c', id: 'head3', targetContentType: 'text/plain',
-            requires: 'head1, head2', disposition: Module.HEAD
+            disposition: Module.HEAD, requires: 'head1, head2'
         runner.inline request, 'i', id: 'foo', targetContentType: 'text/plain'
         runner.inline request, 'j', id: 'bar', targetContentType: 'text/plain'
         runner.inline request, 'k', id: 'baz', targetContentType: 'text/plain',
@@ -458,6 +462,25 @@ class BaseRunnerSpec extends Specification {
 
         then:
         out.toString() == 'abcijkxyz'
+    }
+
+    def "render foot renders un-rendered modules required by head modules"() {
+        setup:
+        def request = [:]
+        runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
+        runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
+        runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain',
+            disposition: Module.HEAD, requires: 'foo, bar'
+
+        def out = new StringWriter()
+
+        when:
+        runner.renderHead request, out
+        runner.render request, out, 'bar'
+        runner.renderFoot request, out
+
+        then:
+        out.toString() == 'zyx'
     }
 
 
@@ -591,7 +614,7 @@ class BaseRunnerSpec extends Specification {
         runner.calculateHeadModules(request)*.targetContent == ['foo', 'bar', 'baz']
     }
 
-    def "all modules in head when required module with head disposition requires modules without"() {
+    def "head modules in head and foot in foot when required module with head disposition requires modules without"() {
         setup:
         runner.loader.modules = [
             foo: new BaseModule(id: 'foo', disposition: Module.HEAD),
@@ -604,7 +627,23 @@ class BaseRunnerSpec extends Specification {
         runner.getRequiredModuleIds(request) << 'foo'
 
         expect:
-        runner.calculateHeadModules(request)*.id == ['bar', 'baz', 'foo']
+        runner.calculateHeadModules(request)*.id == ['foo']
+    }
+
+    def "head modules in head and foot in foot when required module without head disposition requires modules with"() {
+        setup:
+        runner.loader.modules = [
+            foo: new BaseModule(id: 'foo'),
+            bar: new BaseModule(id: 'bar'),
+            baz: new BaseModule(id: 'baz', disposition: Module.HEAD),
+        ]
+        runner.loader.modules.with { foo.requires = [ bar, baz ] }
+
+        def request = [:]
+        runner.getRequiredModuleIds(request) << 'foo'
+
+        expect:
+        runner.calculateHeadModules(request)*.id == ['baz']
     }
 
     def "only required modules in head even when non-required modules are configured for head"() {
@@ -624,7 +663,7 @@ class BaseRunnerSpec extends Specification {
         runner.calculateHeadModules(request)*.id == ['foo', 'bar']
     }
 
-    def "all required modules in head when matching head pattern"() {
+    def "only required modules in head that match head pattern"() {
         setup:
         runner.loader.config.head.order = '''
             first

@@ -12,10 +12,10 @@ class ScriptRendererSpec extends Specification {
     def renderer = new ScriptRenderer(name: 'test-renderer',
         runner: new BaseRunner(new BaseLoader(testConfig)))
 
-    def "render empty script tag with empty module"() {
+    def "render nothing with empty module"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule()
-        then: out.toString() == '<script></script>'
+        then: out.toString() == ''
     }
 
     def "render content in script tag"() {

@@ -13,10 +13,10 @@ class TextRendererSpec extends Specification {
     def renderer = new TextRenderer(name: 'test-renderer',
         runner: new BaseRunner(new BaseLoader(testConfig)))
 
-    def "render empty iframe tag with empty module"() {
+    def "render nothing with empty module"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule()
-        then: out.toString() == '<iframe></iframe>'
+        then: out.toString() == ''
     }
 
     def "render raw xml content, minus prologue"() {

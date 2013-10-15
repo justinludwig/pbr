@@ -11,7 +11,7 @@ class PbrTestHelper {
     Map getTestConfig() {
         def tmp = "${System.properties.'java.io.tmpdir'}/pbr-test"
         PBR.BASE_CONFIG + [
-            manifest: "$tmp/modules.txt",
+            manifest: "$tmp/modules.json",
             sourceDir: "$tmp/source",
             targetDir: "$tmp/target",
             workingDir: "$tmp/work",

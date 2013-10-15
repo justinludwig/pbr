@@ -121,6 +121,7 @@ class BaseRunner implements Runner {
             writeFileContent response.outputStream, module, file
 
         response.flushBuffer()
+        loader?.log?.debug "$request.method $module.id as $file.path"
     }
 
     // impl
@@ -269,17 +270,14 @@ class BaseRunner implements Runner {
      */
     Collection<Module> calculateHeadModules(request) {
         def inline = getInlineModules(request)
+            println "*** $loader.headPatterns"
 
         // map of ids to modules for each module required in head
         def modules = getRequiredModuleIds(request).inject([:]) { map, id ->
             def module = inline[id] ?: loader ? loader.modules[id] : null
             if (module) {
-                if (module.disposition == Module.HEAD || loader?.headPatterns.any {
-                    module.id ==~ it
-                }) {
-                    module.requires.each { map[it.id] = it }
-                    map[id] = module
-                }
+                addToMapIfRequiredInHead module, map
+                module.requires.each { addToMapIfRequiredInHead it, map }
             } else {
                 loader?.log?.warn "no module found for required id $id"
             }
@@ -287,6 +285,15 @@ class BaseRunner implements Runner {
         }
 
         orderModulesWithPatterns modules, loader?.headPatterns
+    }
+
+    private addToMapIfRequiredInHead(Module module, Map map) {
+        println "--- check $module.id for head"
+        if (module.disposition == Module.HEAD ||
+            loader?.headPatterns.any { module.id ==~ it }) {
+            println "+++ add $module.id for head"
+            map[module.id] = module
+        }
     }
 
     /**

@@ -13,11 +13,17 @@ class TextRenderer implements Renderer {
     Runner runner
 
     void render(request, Writer out, Module module) {
+        // strip xml prologue and dtd
+        def content = stripPrologue(module.targetContent)
+        def url = module.targetUrl
+        if (!content && !url) {
+            runner.loader.log.info "no text to render for module $module.id"
+            return
+        }
+
         // dump content directly into page
-        if (module.targetContent) {
-            // but first stripping xml prologue and dtd
-            def content = stripPrologue(module.targetContent)
-            // and strip html head/body tags
+        if (content) {
+            // strip html head/body tags
             if (module.targetContentType == 'text/html')
                 content = stripHtmlWrapperTags(content)
             // and escape non-html/xml content
@@ -28,7 +34,7 @@ class TextRenderer implements Renderer {
         // assume head disposition urls are links
         } else if (module.disposition == Module.HEAD) {
             out << '<link' << runner.tools.attrs(
-                href: module.targetUrl,
+                href: url,
                 type: module.targetContentType,
                 rel: module.params.rel ?: 'alternate',
                 title: module.params.title,
@@ -37,7 +43,7 @@ class TextRenderer implements Renderer {
         // assume other urls are iframes
         } else {
             out << '<iframe' << runner.tools.attrs(
-                src: module.targetUrl,
+                src: url,
                 title: module.params.title,
                 class: module.params.class,
                 style: module.params.style,

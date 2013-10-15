@@ -43,7 +43,9 @@ class PBR {
                 'text/*': 'com.pitchstone.plugin.pbr.run.renderer.TextRenderer',
             ],
         ],
-        manifest: 'target/pbr-modules.txt',
+        manifest: 'target/pbr-modules.json',
+        reloadInterval: 1000, // ms to check for changes
+        reloadOnConfigChange: true,
         sourceDir: 'web-app',
         targetDir: 'target/static',
         // workingDir: "${System.properties.'java.io.tmpdir'}/pbr",
@@ -52,7 +54,7 @@ class PBR {
     static process(Map config = [:]) {
         def loader = new BaseLoader(config)
         new BaseBuilder(loader).processAll()
-        loader.saveModules()
+        loader.save()
     }
 
     static process(Class config, String env = 'production') {
@@ -64,18 +66,5 @@ class PBR {
             config = "file:$config"
         process new ConfigSlurper(env).parse(new URL(config))
     }
-
-    /**
-     * Default config for unit tests.
-     */
-    static Map testConfig = {
-        def tmp = "${System.properties.'java.io.tmpdir'}/pbr-test"
-        BASE_CONFIG + [
-            manifest: "$tmp/modules.txt",
-            sourceDir: "$tmp/source",
-            targetDir: "$tmp/target",
-            workingDir: "$tmp/work",
-        ]
-    }()
 
 }

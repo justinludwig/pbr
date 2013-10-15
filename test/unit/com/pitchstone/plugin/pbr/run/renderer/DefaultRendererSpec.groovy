@@ -13,10 +13,10 @@ class DefaultRendererSpec extends Specification {
     def renderer = new DefaultRenderer(name: 'test-renderer',
         runner: new BaseRunner(new BaseLoader(testConfig)))
 
-    def "render empty embed tag with empty module"() {
+    def "render nothing with empty module"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule()
-        then: out.toString() == '<embed>'
+        then: out.toString() == ''
     }
 
     def "render content as data url in src attr of embed tag"() {

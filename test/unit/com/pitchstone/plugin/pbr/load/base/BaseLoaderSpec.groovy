@@ -405,21 +405,18 @@ class BaseLoaderSpec extends Specification {
 
 
 
-    def "empty modules are saved"() {
+    def "empty modules are reverted"() {
         when:
-        loader.saveModules()
-        loader.modules.jquery = new BaseModule()
-        loader.loadModules()
+        loader.revert()
         then:
         loader.modules == [:]
     }
 
-    def "a simple module is saved"() {
+    def "a simple module is reverted"() {
         when:
         loader.config.module.definition.jquery = 'js/jquery.js'
-        loader.saveModules()
-        loader.modules = [:]
-        loader.loadModules()
+        loader.modules
+        loader.revert()
         then:
         loader.modules.size() == 1
         loader.modules.jquery
@@ -428,29 +425,79 @@ class BaseLoaderSpec extends Specification {
         loader.modules.jquery.params == [:]
     }
 
-    def "a complex module is saved"() {
+    def "empty modules are reverted individually"() {
         when:
-        loader.config.module.definition.'x/x' =
-            stringModuleProperties.inject([:]) { m,i -> m[i] = 'x'; m } + [
-                cacheControl: [foo:'bar'],
-                lastModified: new Date(0),
-                quality: 0.123f,
-                title: '<\\\'/> \u00ae',
-                requires : ' ',
-            ]
-        loader.saveModules()
-        loader.modules = [:]
-        loader.loadModules()
+        loader.revert([])
+        then:
+        loader.modules == [:]
+    }
+
+    def "a simple module is reverted individually"() {
+        when:
+        loader.config.module.definition.jquery = 'js/jquery.js'
+        loader.modules.jquery.targetUrl = 'foo.js'
+        loader.revert([loader.modules.jquery])
         then:
         loader.modules.size() == 1
-        loader.modules.'x/x'
-        stringModuleProperties.each {
-            assert loader.modules.'x/x'[it] == 'x'
-        }
-        loader.modules.'x/x'.cacheControl == [foo:'bar']
-        loader.modules.'x/x'.lastModified == new Date(0)
-        loader.modules.'x/x'.quality == 0.123f
-        loader.modules.'x/x'.params == [title:'<\\\'/> \u00ae']
+        loader.modules.jquery
+        loader.modules.jquery.sourceUrl == 'js/jquery.js'
+        loader.modules.jquery.targetUrl == 'js/jquery.js'
+        loader.modules.jquery.params == [:]
+    }
+
+    def "one module with hierarchical requirements is reverted individually"() {
+        when:
+        loader.config = [
+            module: [
+                definition: [
+                    app: [
+                        requires: 'jquery-ui',
+                        url: 'js/app.js',
+                    ],
+                    jquery: 'js/jquery.js',
+                    'jquery-ui': [
+                        requires: 'jquery',
+                        url: 'js/jquery-ui.js',
+                    ],
+                ]
+            ]
+        ]
+        loader.modules.'jquery-ui'.targetUrl = 'foo.js'
+        loader.revert([loader.modules.'jquery-ui'])
+        then:
+        loader.modules.size() == 3
+        loader.modules.jquery.requires.empty
+        loader.modules.'jquery-ui'.targetUrl == 'js/jquery-ui.js'
+        loader.modules.'jquery-ui'.requires == [loader.modules.jquery]
+        loader.modules.app.requires.sort { it.id } == [
+            loader.modules.jquery,
+            loader.modules.'jquery-ui',
+        ]
+    }
+
+
+
+    def "empty modules are saved"() {
+        when:
+        loader.save()
+        loader.modules.jquery = new BaseModule()
+        loader.load()
+        then:
+        loader.modules == [:]
+    }
+
+    def "a simple module is saved"() {
+        when:
+        loader.config.module.definition.jquery = 'js/jquery.js'
+        loader.save()
+        loader.modules = [:]
+        loader.load()
+        then:
+        loader.modules.size() == 1
+        loader.modules.jquery
+        loader.modules.jquery.sourceUrl == 'js/jquery.js'
+        loader.modules.jquery.targetUrl == 'js/jquery.js'
+        loader.modules.jquery.params == [:]
     }
 
     def "modules with requirements are saved"() {
@@ -466,9 +513,9 @@ class BaseLoaderSpec extends Specification {
                 url: 'js/jquery-ui.js',
             ],
         ]
-        loader.saveModules()
+        loader.save()
         loader.modules = [:]
-        loader.loadModules()
+        loader.load()
         then:
         loader.modules.size() == 3
         loader.modules.jquery.requires.empty
@@ -476,6 +523,133 @@ class BaseLoaderSpec extends Specification {
         loader.modules.app.requires.size() == 2
         'jquery' in loader.modules.app.requires.collect { it.id }
         'jquery-ui' in loader.modules.app.requires.collect { it.id }
+    }
+
+    def "a complex module is saved"() {
+        when:
+        loader.config.module.definition.'x/x' =
+            stringModuleProperties.inject([:]) { m,i -> m[i] = 'x'; m } + [
+                cacheControl: [foo:'bar'],
+                lastModified: new Date(0),
+                quality: 0.123f,
+                title: '<\\"/> \u00ae',
+                requires : ' ',
+            ]
+        loader.save()
+        loader.modules = [:]
+        loader.load()
+        then:
+        loader.modules.size() == 1
+        loader.modules.'x/x'
+        stringModuleProperties.each {
+            assert loader.modules.'x/x'[it] == 'x'
+        }
+        loader.modules.'x/x'.cacheControl == [foo:'bar']
+        loader.modules.'x/x'.lastModified == new Date(0)
+        loader.modules.'x/x'.quality == 0.123f
+        loader.modules.'x/x'.params == [title:'<\\"/> \u00ae']
+    }
+
+
+
+    def "empty modules are written to json"() {
+        setup:
+        def writer = new StringWriter()
+        when:
+        loader.writeJson([:], writer)
+        then:
+        writer.toString() == '{}'
+    }
+
+    def "a simple module is written to json"() {
+        setup:
+        def writer = new StringWriter()
+        when:
+        loader.writeJson([
+            jquery: new BaseModule(url: 'js/jquery.js'),
+        ], writer)
+        then:
+        writer.toString() == '''
+{
+    "jquery": {
+        "sourceUrl": "js/jquery.js",
+        "targetUrl": "js/jquery.js"
+    }
+}
+        '''.trim()
+    }
+
+    def "modules with requirements are written to json"() {
+        setup:
+        def writer = new StringWriter()
+        def jquery = new BaseModule(id: 'jquery', url: 'js/jquery.js')
+        def jqueryUi = new BaseModule(
+            id: 'jquery-ui',
+            requires: [jquery],
+            url: 'js/jquery-ui.js',
+        )
+        def app = new BaseModule(
+            id: 'app',
+            requires: [jquery, jqueryUi],
+            url: 'js/app.js',
+        )
+        when:
+        loader.writeJson([ jquery: jquery, 'jquery-ui': jqueryUi, app: app, ], writer)
+        then:
+        writer.toString() == '''
+{
+    "app": {
+        "sourceUrl": "js/app.js",
+        "targetUrl": "js/app.js",
+        "requires": "jquery jquery-ui"
+    },
+    "jquery": {
+        "sourceUrl": "js/jquery.js",
+        "targetUrl": "js/jquery.js"
+    },
+    "jquery-ui": {
+        "sourceUrl": "js/jquery-ui.js",
+        "targetUrl": "js/jquery-ui.js",
+        "requires": "jquery"
+    }
+}
+        '''.trim()
+    }
+
+    def "a complex module is written to json"() {
+        setup:
+        def writer = new StringWriter()
+        when:
+        loader.writeJson([
+            'x/x': new BaseModule(
+                stringModuleProperties.inject([:]) { m,i -> m[i] = 'x'; m } + [
+                    cacheControl: [foo:'bar'],
+                    lastModified: new Date(0),
+                    quality: 0.123f,
+                    params: [
+                        title: '<\\"/> \u00ae',
+                    ],
+                ]
+            ),
+        ], writer)
+        // skip etag because out of order
+        def stringValues = stringModuleProperties.findAll { it != 'etag' }.
+            collect { "\"$it\": \"x\"" }.join(',\n        ')
+        then:
+        writer.toString() == """
+{
+    "x/x": {
+        ${stringValues},
+        "cacheControl": {
+            "foo": "bar"
+        },
+        "etag": "x",
+        "lastModified": "1970-01-01T00:00:00+0000",
+        "quality": 0.123,
+        "title": "<\\\\\\"/> \u00ae"
+    }
+}
+        """.trim()
     }
 
 

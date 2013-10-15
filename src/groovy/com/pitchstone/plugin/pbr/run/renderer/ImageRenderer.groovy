@@ -25,6 +25,12 @@ class ImageRenderer implements Renderer {
         if (module.targetContent && !(module.targetContent ==~ /^data:.*/))
             url = "data:${module.targetContentType};base64,${module.targetContent}"
 
+        // nothing to render
+        if (!url) {
+            runner.loader.log.info "no image to render for module $module.id"
+            return
+        }
+
         // assume that images in the head are meant to be shortcut icons
         if (module.disposition == Module.HEAD)
             out << '<link' << runner.tools.attrs(

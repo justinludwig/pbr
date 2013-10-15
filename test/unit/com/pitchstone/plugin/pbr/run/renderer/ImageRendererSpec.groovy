@@ -13,10 +13,10 @@ class ImageRendererSpec extends Specification {
     def renderer = new ImageRenderer(name: 'test-renderer',
         runner: new BaseRunner(new BaseLoader(testConfig)))
 
-    def "render empty img tag with empty module"() {
+    def "render nothing with empty module"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule()
-        then: out.toString() == '<img>'
+        then: out.toString() == ''
     }
 
     def "render content as data url in src attr of img tag"() {

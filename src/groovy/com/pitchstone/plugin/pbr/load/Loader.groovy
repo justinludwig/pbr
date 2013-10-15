@@ -30,6 +30,11 @@ interface Loader {
     Map<String,Module> modules
 
     /**
+     * Returns the module for the specified sourceUrl, or null.
+     */
+    Module getModuleForSourceUrl(String url)
+
+    /**
      * Returns the module for the specified targetUrl, or null.
      */
     Module getModuleForTargetUrl(String url)
@@ -37,24 +42,38 @@ interface Loader {
     /**
      * Loads the saved modules from the default manifest file.
      */
-    void loadModules()
+    void load()
 
     /**
      * Loads the saved modules from the specified manifest file.
      * @param file Path to manifiest file, or null/empty for default manifest.
      */
-    void loadModules(String file)
+    void load(String file)
 
     /**
      * Saves the loaded modules to the default manifest file.
      */
-    void saveModules()
+    void save()
 
     /**
      * Saves the loaded modules to the specified manifest file.
      * @param file Path to manifiest file, or null/empty for default manifest.
      */
-    void saveModules(String file)
+    void save(String file)
+
+    /**
+     * Reverts all modules to their original configuration state
+     * (so that they can be re-processed).
+     */
+    void revert()
+
+    /**
+     * Reverts the specified modules to their original configuration state
+     * (so that they can be re-processed).
+     * @param Modules to revert.
+     * @return Reloaded modules (not necessarily in the same order).
+     */
+    Collection<Module> revert(Collection<Module> modules)
 
     /**
      * Ordered list of module-id patterns of modules that should be rendered

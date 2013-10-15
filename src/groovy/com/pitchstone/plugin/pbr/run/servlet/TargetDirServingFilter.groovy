@@ -28,12 +28,12 @@ class TargetDirServingFilter implements Filter {
         FilterChain chain) throws IOException, ServletException {
 
         try {
-            preBuildResourcesService.runner.serve request, response
+            preBuiltResourcesService.runner.serve request, response
 
         } catch (Throwable e) {
             try {
-                preBuildResourcesService.loader.log.error(
-                    "error serving $request.requestURL", e)
+                def url = request.requestURL
+                preBuiltResourcesService.log.error "error serving $url", e
             } catch (Throwable ee) {
                 e.printStackTrace()
                 ee.printStackTrace()

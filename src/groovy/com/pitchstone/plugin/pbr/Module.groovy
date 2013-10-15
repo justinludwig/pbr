@@ -123,4 +123,9 @@ interface Module {
      */
     Map params
 
+    /**
+     * Serializes state to map, then can then be written to JSON.
+     */
+    Map toJson()
+
 }

@@ -13,14 +13,21 @@ class StyleRenderer implements Renderer {
     Runner runner
 
     void render(request, Writer out, Module module) {
-        if (module.targetContent)
+        def content = module.targetContent
+        def url = module.targetUrl
+        if (!content && !url) {
+            runner.loader.log.info "no style to render for module $module.id"
+            return
+        }
+
+        if (content)
             out << '<style' << runner.tools.attrs(
                 type: module.targetContentType,
                 media: module.params.media,
-            ) << '>' << module.targetContent << '</style>'
+            ) << '>' << content << '</style>'
         else
             out << '<link' << runner.tools.attrs(
-                href: module.targetUrl,
+                href: url,
                 rel: module.params.rel ?: 'stylesheet',
                 media: module.params.media,
                 title: module.params.title,
