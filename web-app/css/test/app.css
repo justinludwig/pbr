@@ -1,0 +1,8 @@
+#test-css {
+    visibility: hidden;
+    color: green;
+}
+#test-css:before {
+    visibility: visible;
+    content: "Test CSS: Passed!";
+}

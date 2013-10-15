@@ -1,0 +1,72 @@
+
+def cloudflare = '//cdnjs.cloudflare.com/ajax/libs'
+def googlejs = '//ajax.googleapis.com/ajax/libs'
+def googlefonts = '//fonts.googleapis.com/css'
+
+contentType {
+    toRenderer.'application/xml' = 'com.pitchstone.plugin.pbr.run.renderer.TextRenderer'
+}
+
+processor {
+    order = '''
+        com.pitchstone.plugin.pbr.build.processor.FillInContentType
+        com.pitchstone.plugin.pbr.build.processor.FillInDisposition
+        com.pitchstone.plugin.pbr.build.processor.FillInLastModified
+        com.pitchstone.plugin.pbr.build.processor.ApplyBaseUrl
+        com.pitchstone.plugin.pbr.build.processor.DeployToTargetDir
+    '''
+}
+
+head {
+    order = '''
+        font.*
+        --- other ---
+        *css*
+        *.stylesheet
+        *.favicon
+        modernizr
+    '''
+}
+foot {
+    order = '''
+        underscore
+        jquery
+        jquery-ui
+        application
+        *.script
+        --- other ---
+    '''
+}
+
+module {
+    definition {
+
+        application {
+            requires = 'modernizr underscore jquery'
+            submodules {
+                stylesheet = 'css/test/app.css'
+                script = 'js/test/app.js'
+            }
+        }
+
+        jquery = "${googlejs}/jquery/1.10.2/jquery.min.js"
+        'jquery-ui-css-redmond' {
+            url = "${googlejs}/jqueryui/1.10.3/themes/redmond/jquery-ui.css"
+        }
+        'jquery-ui-css-smoothness' {
+            url ="${googlejs}/jqueryui/1.10.3/themes/smoothness/jquery-ui.css"
+        }
+        'jquery-ui' {
+            requires = 'jquery jquery-ui-css-smoothness'
+            url = "${googlejs}/jqueryui/1.10.3/jquery-ui.min.js"
+        }
+
+        modernizr {
+            url = "${cloudflare}/modernizr/2.6.2/modernizr.min.js"
+            disposition = 'head'
+        }
+
+        underscore = "${cloudflare}/underscore.js/1.5.2/underscore-min.js"
+
+    }
+}

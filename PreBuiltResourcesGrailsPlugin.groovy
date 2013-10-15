@@ -1,3 +1,10 @@
+
+import com.pitchstone.plugin.pbr.PBR
+import com.pitchstone.plugin.pbr.run.servlet.TargetDirServingFilter
+import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
+import org.springframework.core.io.FileSystemResource
+import org.springframework.web.filter.DelegatingFilterProxy
+
 class PreBuiltResourcesGrailsPlugin {
     // the plugin version
     def version = "0.1"
@@ -7,8 +14,15 @@ class PreBuiltResourcesGrailsPlugin {
     def dependsOn = [:]
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-        "grails-app/views/error.gsp"
+        'grails-app/views/error.gsp',
+        'grails-app/*/test/*.*',
+        'web-app/*/test/*.*',
     ]
+
+    String getWatchedResources() {
+        def sourceDir = getPreInitConfigProp('sourceDir') ?: ''
+        "file:${sourceDir.startsWith('/')?'':'./'}${sourceDir}/**/*.*"
+    }
 
     def title = "Pre-Built Resources"
     def author = "Justin Ludwig"
@@ -18,7 +32,7 @@ Helps manage static resources, building them out when the app is packaged.
     '''.trim()
 
     // URL to the plugin's documentation
-    def documentation = "http://grails.org/plugin/pre-built-resources"
+    def documentation = ''//"http://grails.org/plugin/pre-built-resources"
 
     // Extra (optional) plugin metadata
 
@@ -38,33 +52,169 @@ Helps manage static resources, building them out when the app is packaged.
 //    def scm = [ url: "http://svn.codehaus.org/grails-plugins/" ]
 
     def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before
+        def baseUrl = getPreInitConfigProp('baseUrl', application)
+        if (!baseUrl?.startsWith('/')) return
+
+        log.info "installing TargetDirServingFilter for $baseUrl"
+
+        xml.filter[0] + {
+            filter {
+                'filter-name' 'targetDirServingFilter'
+				'filter-class' DelegatingFilterProxy.name
+            }
+        }
+        xml.'filter-mapping'[0] + {
+            'filter-mapping' {
+                'filter-name' 'targetDirServingFilter'
+                'url-pattern' "${baseUrl}/*"
+            }
+        }
     }
 
     def doWithSpring = {
-        // TODO Implement runtime spring config (optional)
+        app = application
+
+		targetDirServingFilter(TargetDirServingFilter) {
+			preBuiltResourcesService = ref('preBuiltResourcesService')
+		}
     }
 
     def doWithDynamicMethods = { ctx ->
-        // TODO Implement registering dynamic methods to classes (optional)
     }
 
     def doWithApplicationContext = { applicationContext ->
-        // TODO Implement post initialization spring config (optional)
+        runReloadThread()
     }
 
     def onChange = { event ->
-        // TODO Implement code that is executed when any artefact that this plugin is
-        // watching is modified and reloaded. The event contains: event.source,
-        // event.application, event.manager, event.ctx, and event.plugin.
+        app = event.application
+
+        if (event.source instanceof FileSystemResource)
+            reloadFile event.source.file
     }
 
     def onConfigChange = { event ->
-        // TODO Implement code that is executed when the project configuration changes.
-        // The event is the same as for 'onChange'.
+        app = event.application
+
+        reloadConfig()
     }
 
     def onShutdown = { event ->
-        // TODO Implement code that is executed when the application shuts down (optional)
+        reloadInterval = 0
+    }
+
+    // impl
+
+    def app
+
+    def getService() {
+        app.mainContext.preBuiltResourcesService
+    }
+
+    def getConfig() {
+        service.loader.config
+    }
+
+    /**
+     * Returns top-level configuration property value
+     * from raw grails config prior to PBR service initialization.
+     */
+    def getPreInitConfigProp(String prop, configHolder = null) {
+        def config = (configHolder ?: CH).config.grails.plugins.preBuiltResources
+        // workaround for GROOVY-5731:
+        // checking config before loader merges it prevents merging of base config
+        if (config[prop] == [:])
+            config[prop] = PBR.BASE_CONFIG[prop]
+        return config[prop]
+    }
+
+    /**
+     * Schedules the specified file to be reloaded
+     * (after checking if it's applicable).
+     */
+    def reloadFile(File file) {
+        if (reloadInterval > 0)
+            synchronized (reloadFileQueue) {
+                reloadFileQueue.push(file)
+            }
+    }
+
+    /**
+     * Schedules the configuration to be reloaded
+     * (after checking if reloading is enabled).
+     */
+    def reloadConfig() {
+        reloadConfigFlag = true
+    }
+
+    volatile reloadInterval = 0 // ms
+    volatile reloadConfigFlag = false
+    List reloadFileQueue = []
+
+    /**
+     * Starts the reloading thread.
+     */
+    def runReloadThread() {
+        updateReloadInterval()
+
+        Thread.start {
+            while (reloadInterval > 0) {
+                doReloadConfig()
+                doReloadFiles()
+                Thread.sleep reloadInterval
+            }
+        }
+    }
+
+    /**
+     * Does the actual config reloading, if scheduled.
+     */
+    def doReloadConfig() {
+        if (reloadConfigFlag) {
+            if (config.reloadOnConfigChange)
+                service.reloadConfig()
+
+            updateReloadInterval()
+        }
+    }
+
+    /**
+     * Does the actual file reloading, if scheduled.
+     */
+    def doReloadFiles() {
+        def toProcess
+        synchronized (reloadFileQueue) {
+            if (!reloadFileQueue) return
+            toProcess = new ArrayList(reloadFileQueue)
+            reloadFileQueue.clear()
+        }
+
+        def sourceDir = config.sourceDir ?: ''
+        if (!sourceDir.startsWith('/'))
+            sourceDir = new File(sourceDir).canonicalPath
+        if (!sourceDir.endsWith('/'))
+            sourceDir = "${sourceDir}/"
+
+        toProcess = toProcess.collect { file ->
+            def path = file.canonicalPath
+
+            // remove sourceDir from path to get back to sourceUrl
+            if (path.startsWith(sourceDir))
+                path = path.substring(sourceDir.length())
+            // skip anything not in sourceDir
+            else
+                return null
+
+            service.loader.getModuleForSourceUrl path
+        }.findAll { it }
+
+        if (toProcess)
+            service.process toProcess
+    }
+
+    def updateReloadInterval() {
+        reloadInterval = config.reloadInterval
+        if (reloadInterval)
+            service.log.info "watching changes to $watchedResources every $reloadInterval ms"
     }
 }
