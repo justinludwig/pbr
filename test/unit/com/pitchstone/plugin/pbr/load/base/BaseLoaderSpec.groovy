@@ -646,7 +646,7 @@ class BaseLoaderSpec extends Specification {
         "etag": "x",
         "lastModified": "1970-01-01T00:00:00+0000",
         "quality": 0.123,
-        "title": "<\\\\\\"/> \u00ae"
+        "title": "<\\\\\\"/> \\u00AE"
     }
 }
         """.trim()

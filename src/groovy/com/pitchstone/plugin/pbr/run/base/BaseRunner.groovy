@@ -270,7 +270,6 @@ class BaseRunner implements Runner {
      */
     Collection<Module> calculateHeadModules(request) {
         def inline = getInlineModules(request)
-            println "*** $loader.headPatterns"
 
         // map of ids to modules for each module required in head
         def modules = getRequiredModuleIds(request).inject([:]) { map, id ->
@@ -288,10 +287,8 @@ class BaseRunner implements Runner {
     }
 
     private addToMapIfRequiredInHead(Module module, Map map) {
-        println "--- check $module.id for head"
         if (module.disposition == Module.HEAD ||
             loader?.headPatterns.any { module.id ==~ it }) {
-            println "+++ add $module.id for head"
             map[module.id] = module
         }
     }

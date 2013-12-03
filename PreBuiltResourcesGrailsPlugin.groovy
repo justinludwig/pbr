@@ -9,11 +9,12 @@ class PreBuiltResourcesGrailsPlugin {
     // the plugin version
     def version = "0.1"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "2.1 > *"
+    def grailsVersion = "2.0 > *"
     // the other plugins this plugin depends on
     def dependsOn = [:]
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
+        'grails-app/conf/Test*',
         'grails-app/views/error.gsp',
         'grails-app/*/test/*.*',
         'web-app/*/test/*.*',
@@ -40,7 +41,10 @@ Helps manage static resources, building them out when the app is packaged.
     def license = "APACHE"
 
     // Details of company behind the plugin (if there is one)
-//    def organization = [ name: "My Company", url: "http://www.my-company.com/" ]
+    def organization = [
+        name: "PitchStone Technology",
+        url: "http://www.pitchstonetechnology.com/",
+    ]
 
     // Any additional developers beyond the author specified above.
 //    def developers = [ [ name: "Joe Bloggs", email: "joe@bloggs.net" ]]
