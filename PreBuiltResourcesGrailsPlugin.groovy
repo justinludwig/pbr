@@ -7,7 +7,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 
 class PreBuiltResourcesGrailsPlugin {
     // the plugin version
-    def version = "0.1"
+    def version = "0.1-SNAPSHOT"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
     // the other plugins this plugin depends on
@@ -30,7 +30,7 @@ class PreBuiltResourcesGrailsPlugin {
     def authorEmail = "justin@pitchstonetechnology.com"
     def description = '''
 Helps manage static resources, building them out when the app is packaged.
-    '''.trim()
+    '''
 
     // URL to the plugin's documentation
     def documentation = ''//"http://grails.org/plugin/pre-built-resources"

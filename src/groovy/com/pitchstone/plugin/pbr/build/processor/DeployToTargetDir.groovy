@@ -18,7 +18,7 @@ class DeployToTargetDir implements Processor {
     Builder builder
 
     void process(Module module) {
-        def srcUrl = module.builtUrl || module.sourceUrl
+        def srcUrl = module.builtUrl ?: module.sourceUrl
         def dstUrl = module.targetUrl
         if (!srcUrl || !dstUrl) return
 

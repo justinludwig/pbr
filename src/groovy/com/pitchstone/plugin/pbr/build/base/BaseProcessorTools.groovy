@@ -43,10 +43,23 @@ class BaseProcessorTools implements ProcessorTools {
     }
 
     String getExtension(String url) {
-        // strip query or idref from end of url; strip path segments from start
-        def basename = url?.replaceFirst(/[#?].*/, '')?.replaceFirst('.*/', '') ?: ''
-        def parts = basename.split(/\./)
-        parts.size() > 1 ? parts.last() : ''
+        def m = url =~ /(\.[^.\/]+?)?([#?]|$)/
+        m.find() // always matches at least $
+        // strip . from extension
+        m.group(1) ? m.group(1).substring(1) : ''
+    }
+
+    String setExtension(String url, String ext) {
+        ext = ext ? ".${ext}" : ''
+
+        def m = url =~ /(\.[^.\/]*?)?([#?].*|$)/
+        m.find() // always matches at least $
+        // no existing extension and no query or idref: simply append ext
+        if (!m.group())
+            return "${url?:''}${ext}"
+
+        // keep url until start of match, add ext, add rest of url
+        "${url.substring(0, m.start())}${ext}${m.group(2)}"
     }
 
     String getExtensionFromContentType(String contentType) {

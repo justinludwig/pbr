@@ -53,6 +53,14 @@ interface ProcessorTools {
     String getExtension(String url)
 
     /**
+     * Returns the specified url with the specified extension added to
+     * or replaced in the url.
+     * For example, returns 'http://example.com/x.css?y#z' for the url
+     * 'http://example.com/x.less?y#z' and extension 'css'.
+     */
+    String setExtension(String url, String ext)
+
+    /**
      * Returns file extension for the specified content-type.
      * For example, returns 'css' for 'text/css'.
      * Returns empty ('') if extension unknown.

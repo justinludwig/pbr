@@ -261,6 +261,84 @@ class BaseProcessorToolsSpec extends Specification {
 
 
 
+    def "set extension on a null url returns just the new extension"() {
+        expect: tools.setExtension(null, 'xml') == '.xml'
+    }
+
+    def "set extension on an empty url returns just the new extension"() {
+        expect: tools.setExtension('', 'xml') == '.xml'
+    }
+
+    def "set extension on a simple name without an extension adds the new extension"() {
+        expect: tools.setExtension('foo', 'xml') == 'foo.xml'
+    }
+    def "set extension on a simple name with an extension replaces the extension"() {
+        expect: tools.setExtension('foo.txt', 'xml') == 'foo.xml'
+    }
+
+    def "set extension on a relative url without an extension adds the new extension"() {
+        expect: tools.setExtension('foo/bar/baz', 'xml') == 'foo/bar/baz.xml'
+    }
+    def "set extension on a relative url with an extension replaces the extension"() {
+        expect: tools.setExtension('foo/bar/baz.txt', 'xml') == 'foo/bar/baz.xml'
+    }
+
+    def "set extension on the root directory adds the new extension"() {
+        expect: tools.setExtension('/', 'xml') == '/.xml'
+    }
+    def "set extension on a zero-directory http url adds the new extension"() {
+        expect: tools.setExtension('http://example.com/', 'xml') == 'http://example.com/.xml'
+    }
+
+    def "set extension on an http url without an extension adds the new extension"() {
+        expect: tools.setExtension('http://example.com/foo', 'xml') ==
+            'http://example.com/foo.xml'
+    }
+    def "set extension on an http url with an extension replaces the extension"() {
+        expect: tools.setExtension('http://example.com/foo.txt', 'xml') ==
+            'http://example.com/foo.xml'
+    }
+
+    def "set extension on an url with a query without an extension adds the new extension"() {
+        expect: tools.setExtension('foo?q=x', 'xml') == 'foo.xml?q=x'
+    }
+    def "set extension on an an url with a query with an extension replaces the extension"() {
+        expect: tools.setExtension('foo.txt?q=x', 'xml') == 'foo.xml?q=x'
+    }
+
+    def "set extension on an url with an idref without an extension adds the new extension"() {
+        expect: tools.setExtension('foo#bar', 'xml') == 'foo.xml#bar'
+    }
+    def "set extension on an url with an idref query string with an extension replaces the extension"() {
+        expect: tools.setExtension('foo.txt#bar', 'xml') == 'foo.xml#bar'
+    }
+
+    def "set extension on an url with a query and idref without an extension adds the new extension"() {
+        expect: tools.setExtension('foo?q=x#bar', 'xml') == 'foo.xml?q=x#bar'
+    }
+    def "set extension on an url with a query and idref with an extension replaces the extension"() {
+        expect: tools.setExtension('foo.txt?q=x#bar', 'xml') == 'foo.xml?q=x#bar'
+    }
+
+    def "set extension on an http url with a query and idref without an extension adds the new extension"() {
+        expect: tools.setExtension('http://example.com/foo?q=x#bar', 'xml') ==
+            'http://example.com/foo.xml?q=x#bar'
+    }
+    def "set extension on an http url with a query and idref with an extension replaces the extension"() {
+        expect: tools.setExtension('http://example.com/foo.txt?q=x#bar', 'xml') ==
+            'http://example.com/foo.xml?q=x#bar'
+    }
+
+    def "set extension on the root directory with a query and idref adds the new extension"() {
+        expect: tools.setExtension('/?q=x#bar', 'xml') == '/.xml?q=x#bar'
+    }
+    def "set extension on a zero-directory http url with a query and idref adds the new extension"() {
+        expect: tools.setExtension('http://example.com/?q=x#bar', 'xml') ==
+            'http://example.com/.xml?q=x#bar'
+    }
+
+
+
     def "a null content-type has an empty extension"() {
         expect: tools.getExtensionFromContentType(null) == ''
     }
