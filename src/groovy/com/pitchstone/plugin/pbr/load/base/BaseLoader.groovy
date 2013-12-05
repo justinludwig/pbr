@@ -201,7 +201,11 @@ class BaseLoader implements Loader {
 
         if (props instanceof Map) {
             // is a module definition
-            if (props.url || props.submodules || props.requires) {
+            if (id) {
+                // syntax sugar: all props are submodules
+                if (props.submodules == '*')
+                    props = [submodules: props - [submodules: '*']]
+
                 // create module from properties
                 def p = [:]
                 if (parentProps)

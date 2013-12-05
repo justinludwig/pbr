@@ -127,26 +127,6 @@ class BaseLoaderSpec extends Specification {
         loader.modules.jquery.targetContentType == 'application/javascript'
     }
 
-    def "getModules with two simple definitions in a group has two modules"() {
-        when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        core: 'js/jquery.js',
-                        ui: 'js/jquery-ui.js',
-                    ]
-                ]
-            ]
-        ]
-        then:
-        loader.modules.size() == 2
-        loader.modules.'jquery.core'
-        loader.modules.'jquery.core'.sourceUrl == 'js/jquery.js'
-        loader.modules.'jquery.ui'
-        loader.modules.'jquery.ui'.sourceUrl == 'js/jquery-ui.js'
-    }
-
     def "getModules with two submodules has three modules"() {
         when:
         loader.config = [
@@ -165,6 +145,31 @@ class BaseLoaderSpec extends Specification {
         loader.modules.size() == 3
         loader.modules.'jquery-ui'
         loader.modules.'jquery-ui'.sourceUrl == null
+        loader.modules.'jquery-ui'.params == [:]
+        loader.modules.'jquery-ui.css'
+        loader.modules.'jquery-ui.css'.sourceUrl == 'css/jquery-ui-smoothness.css'
+        loader.modules.'jquery-ui.js'
+        loader.modules.'jquery-ui.js'.sourceUrl == 'js/jquery-ui.js'
+    }
+
+    def "getModules with two submodules via star syntax has three modules"() {
+        when:
+        loader.config = [
+            module: [
+                definition: [
+                    'jquery-ui': [
+                        submodules: '*',
+                        css: 'css/jquery-ui-smoothness.css',
+                        js: 'js/jquery-ui.js',
+                    ]
+                ]
+            ]
+        ]
+        then:
+        loader.modules.size() == 3
+        loader.modules.'jquery-ui'
+        loader.modules.'jquery-ui'.sourceUrl == null
+        loader.modules.'jquery-ui'.params == [:]
         loader.modules.'jquery-ui.css'
         loader.modules.'jquery-ui.css'.sourceUrl == 'css/jquery-ui-smoothness.css'
         loader.modules.'jquery-ui.js'
