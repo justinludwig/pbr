@@ -213,7 +213,7 @@ class BaseServerSpec extends Specification {
         server.serve request, response
 
         then:
-        log == []
+        log == ["HEAD bar as $file"]
         !response.status
         response.contentLength == 3
         !response.outputStream.size()
@@ -235,7 +235,7 @@ class BaseServerSpec extends Specification {
         server.serve request, response
 
         then:
-        log == []
+        log == ["GET bar as $file"]
         !response.status
         response.contentLength == 3
         response.outputStream.toString() == 'foo'

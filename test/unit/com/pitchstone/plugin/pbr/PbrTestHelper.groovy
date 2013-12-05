@@ -1,5 +1,7 @@
 package com.pitchstone.plugin.pbr
 
+import org.apache.commons.logging.Log
+
 /**
  * Utilities for PBR tests.
  */
@@ -67,9 +69,12 @@ class PbrTestHelper {
 
     List mockLogForLoader(loader) {
         def log = []
-        loader.log.metaClass.info = { log << it }
-        loader.log.metaClass.warn = { log << it }
-        loader.log.metaClass.error = { log << it }
+        loader.log = [
+            error: { log << it },
+            warn: { log << it },
+            info: { log << it },
+            debug: { log << it },
+        ] as Log
         return log
     }
 

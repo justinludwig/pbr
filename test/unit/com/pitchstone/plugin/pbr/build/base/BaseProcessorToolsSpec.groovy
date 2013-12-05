@@ -392,8 +392,7 @@ class BaseProcessorToolsSpec extends Specification {
         tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
             workingDir: nonExistantPath,
         ]))
-        def log = []
-        tools.builder.loader.log.metaClass.warn = { log << it }
+        def log = mockLog
         def tmpdir = System.properties.'java.io.tmpdir'
 
         when:
@@ -596,6 +595,10 @@ class BaseProcessorToolsSpec extends Specification {
         workingFile.text =~ '<title>Google</title>'
         module.builtUrl == workingFile.path
         module.builtContentType == 'text/html'
+    }
+
+    protected getMockLog() {
+        mockLogForLoader tools.builder.loader
     }
 
 }

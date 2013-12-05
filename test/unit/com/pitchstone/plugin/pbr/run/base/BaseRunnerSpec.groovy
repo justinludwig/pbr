@@ -238,8 +238,7 @@ class BaseRunnerSpec extends Specification {
 
     def "render undefined modules renders nothing"() {
         setup:
-        def log = []
-        runner.loader.log.metaClass.warn = { log << it }
+        def log = mockLog
         def request = [:]
         def out = new StringWriter()
 
@@ -492,8 +491,7 @@ class BaseRunnerSpec extends Specification {
 
     def "no calculated modules when specified modules not found"() {
         setup:
-        def log = []
-        runner.loader.log.metaClass.warn = { log << it }
+        def log = mockLog
         def request = [:]
 
         when:
@@ -574,8 +572,7 @@ class BaseRunnerSpec extends Specification {
 
     def "no modules in head when required modules not found"() {
         setup:
-        def log = []
-        runner.loader.log.metaClass.warn = { log << it }
+        def log = mockLog
         def request = [:]
         runner.require request, 'foo,bar,baz'
 
@@ -690,8 +687,7 @@ class BaseRunnerSpec extends Specification {
 
     def "no modules in foot when required modules not found"() {
         setup:
-        def log = []
-        runner.loader.log.metaClass.warn = { log << it }
+        def log = mockLog
         def request = [:]
         runner.require request, 'foo,bar,baz'
 
@@ -848,6 +844,10 @@ class BaseRunnerSpec extends Specification {
             Pattern.compile('.*'),
             Pattern.compile('foo|baz'),
         ])*.id == ['foo', 'baz', 'bar']
+    }
+
+    protected getMockLog() {
+        mockLogForLoader runner.loader
     }
 
 }
