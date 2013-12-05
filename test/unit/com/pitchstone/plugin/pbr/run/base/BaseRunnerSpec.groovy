@@ -19,9 +19,10 @@ class BaseRunnerSpec extends Specification {
         runner.renderers.'image/*'.name == 'ImageRenderer'
         runner.renderers.'text/css'.name == 'StyleRenderer'
         runner.renderers.'text/javascript'.name == 'ScriptRenderer'
+        runner.renderers.'text/properties'.name == 'MetaRenderer'
         runner.renderers.'text/*'.name == 'TextRenderer'
         runner.renderers.'*/*'.runner == runner
-        runner.renderers.size() == 5
+        runner.renderers.size() == 6
     }
 
 

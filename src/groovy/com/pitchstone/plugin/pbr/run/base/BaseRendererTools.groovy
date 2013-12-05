@@ -8,9 +8,11 @@ class BaseRendererTools implements RendererTools {
     Runner runner
 
     String attrs(Map m) {
-        m.findAll { k,v -> k }.collect { key, value ->
+        m.collect { key, value ->
             // strip illegal name chars from key
             key = attrName(key)
+            // skip empty keys
+            if (key == '') return ''
 
             // special-case map of css style property:values
             if (value instanceof Map && key == 'style')
