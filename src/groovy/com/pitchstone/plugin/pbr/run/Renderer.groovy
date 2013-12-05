@@ -8,6 +8,7 @@ import com.pitchstone.plugin.pbr.Module
  * to the modules required for a page.
  */
 interface Renderer {
+    static final String HEAD = 'head'
 
     /**
      * Name of processor, set by the runner.
@@ -20,8 +21,9 @@ interface Renderer {
     Runner runner
 
     /**
-     * Renders the specified module to the specified writer.
+     * Renders the specified module to the specified writer,
+     * with optional disposition (null for default disposition).
      */
-    void render(request, Writer out, Module module)
+    void render(request, Writer out, Module module, String disposition)
 
 }

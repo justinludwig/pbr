@@ -1,9 +1,9 @@
 package com.pitchstone.plugin.pbr.run.renderer
 
 import com.pitchstone.plugin.pbr.PbrTestHelper
-import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
+import com.pitchstone.plugin.pbr.run.Renderer
 import com.pitchstone.plugin.pbr.run.base.BaseRunner
 import spock.lang.Specification
 
@@ -55,29 +55,26 @@ class ImageRendererSpec extends Specification {
     def "render head disposition with link tag"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(
-            disposition: Module.HEAD,
             targetUrl: '/foo.png',
-        )
+        ), Renderer.HEAD
         then: out.toString() == '<link href="/foo.png" rel="icon">'
     }
 
     def "render head disposition with custom rel attr"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(
-            disposition: Module.HEAD,
             targetUrl: '/foo.png',
             params: [rel: 'shortcut icon', title: 'Foo'],
-        )
+        ), Renderer.HEAD
         then: out.toString() == '<link href="/foo.png" rel="shortcut icon" title="Foo">'
     }
 
     def "render head disposition content as data url in href attr of link tag"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(
-            disposition: Module.HEAD,
             targetContent: 'xyz=',
             targetContentType: 'image/png',
-        )
+        ), Renderer.HEAD
         then: out.toString() == '<link href="data:image/png;base64,xyz=" rel="icon">'
     }
 

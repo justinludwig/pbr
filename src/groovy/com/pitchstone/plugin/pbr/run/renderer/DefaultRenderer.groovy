@@ -12,7 +12,7 @@ class DefaultRenderer implements Renderer {
     String name
     Runner runner
 
-    void render(request, Writer out, Module module) {
+    void render(request, Writer out, Module module, String disposition = null) {
         def url = module.targetContent ?: module.targetUrl
         // assume that data images are already base64-encoded
         if (module.targetContent && !(module.targetContent ==~ /^data:.*/))
@@ -25,7 +25,7 @@ class DefaultRenderer implements Renderer {
         }
 
         // assume that images in the head are meant to be shortcut icons
-        if (module.disposition == Module.HEAD)
+        if (disposition == HEAD)
             out << '<link' << runner.tools.attrs(
                 href: url,
                 type: module.targetContentType,

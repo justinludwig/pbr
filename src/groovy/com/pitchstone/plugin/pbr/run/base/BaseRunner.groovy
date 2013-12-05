@@ -68,7 +68,7 @@ class BaseRunner implements Runner {
             rendered << module.id
 
             def renderer = getRendererForContentType(module.targetContentType)
-            renderer?.render request, out, module
+            renderer?.render request, out, module, module.disposition
         }
     }
 
@@ -78,14 +78,14 @@ class BaseRunner implements Runner {
             rendered << module.id
 
             def renderer = getRendererForContentType(module.targetContentType)
-            renderer?.render request, out, module
+            renderer?.render request, out, module, Renderer.HEAD
         }
     }
 
     void renderFoot(request, Writer out) {
         calculateFootModules(request).each { module ->
             def renderer = getRendererForContentType(module.targetContentType)
-            renderer?.render request, out, module
+            renderer?.render request, out, module, module.disposition
         }
     }
 
@@ -287,7 +287,7 @@ class BaseRunner implements Runner {
     }
 
     private addToMapIfRequiredInHead(Module module, Map map) {
-        if (module.disposition == Module.HEAD ||
+        if (module.disposition == Renderer.HEAD ||
             loader?.headPatterns.any { module.id ==~ it }) {
             map[module.id] = module
         }

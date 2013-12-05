@@ -12,7 +12,7 @@ class TextRenderer implements Renderer {
     String name
     Runner runner
 
-    void render(request, Writer out, Module module) {
+    void render(request, Writer out, Module module, String disposition = null) {
         // strip xml prologue and dtd
         def content = stripPrologue(module.targetContent)
         def url = module.targetUrl
@@ -32,7 +32,7 @@ class TextRenderer implements Renderer {
             out << content
 
         // assume head disposition urls are links
-        } else if (module.disposition == Module.HEAD) {
+        } else if (disposition == HEAD) {
             out << '<link' << runner.tools.attrs(
                 href: url,
                 type: module.targetContentType,

@@ -12,7 +12,7 @@ class ImageRenderer implements Renderer {
     String name
     Runner runner
 
-    void render(request, Writer out, Module module) {
+    void render(request, Writer out, Module module, String disposition = null) {
         // dump svg content directly into page
         if (module.targetContentType == 'image/svg+xml' && module.targetContent) {
             // but first stripping xml prologue and dtd
@@ -32,7 +32,7 @@ class ImageRenderer implements Renderer {
         }
 
         // assume that images in the head are meant to be shortcut icons
-        if (module.disposition == Module.HEAD)
+        if (disposition == HEAD)
             out << '<link' << runner.tools.attrs(
                 href: url,
                 rel: module.params.rel ?: 'icon',

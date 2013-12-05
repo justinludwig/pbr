@@ -5,7 +5,6 @@ package com.pitchstone.plugin.pbr
  * and/or the requirement to include other modules.
  */
 interface Module {
-    static final String HEAD = 'head'
 
     /**
      * Module identifier. Defaults to source url.

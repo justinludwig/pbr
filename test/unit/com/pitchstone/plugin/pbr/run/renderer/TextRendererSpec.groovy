@@ -1,9 +1,9 @@
 package com.pitchstone.plugin.pbr.run.renderer
 
 import com.pitchstone.plugin.pbr.PbrTestHelper
-import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
+import com.pitchstone.plugin.pbr.run.Renderer
 import com.pitchstone.plugin.pbr.run.base.BaseRunner
 import spock.lang.Specification
 
@@ -96,20 +96,18 @@ class TextRendererSpec extends Specification {
     def "render head disposition with link tag"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(
-            disposition: Module.HEAD,
             targetUrl: '/foo.txt',
-        )
+        ), Renderer.HEAD
         then: out.toString() == '<link href="/foo.txt" rel="alternate">'
     }
 
     def "render head disposition with rel, type, and title attrs"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(
-            disposition: Module.HEAD,
             targetUrl: '/foo.atom',
             targetContentType: 'application/atom+xml',
             params: [rel: 'alternate feed', title: 'Foo Feed'],
-        )
+        ), Renderer.HEAD
         then: out.toString() ==
             '<link href="/foo.atom" type="application/atom+xml" rel="alternate feed" title="Foo Feed">'
     }

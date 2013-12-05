@@ -12,7 +12,7 @@ class ScriptRenderer implements Renderer {
     String name
     Runner runner
 
-    void render(request, Writer out, Module module) {
+    void render(request, Writer out, Module module, String disposition = null) {
         def content = module.targetContent ?: ''
         def src = content ? '' : module.targetUrl
 

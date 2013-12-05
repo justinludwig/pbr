@@ -1,10 +1,10 @@
 package com.pitchstone.plugin.pbr.run.base
 
 import com.pitchstone.plugin.pbr.PbrTestHelper
-import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.load.Loader
 import com.pitchstone.plugin.pbr.load.base.BaseLoader
 import com.pitchstone.plugin.pbr.load.base.BaseModule
+import com.pitchstone.plugin.pbr.run.Renderer
 import java.util.regex.Pattern
 import spock.lang.Specification
 
@@ -354,9 +354,9 @@ class BaseRunnerSpec extends Specification {
     def "render head with all head dispositions renders all"() {
         setup:
         def request = [:]
-        runner.inline request, 'x', disposition: Module.HEAD, targetContentType: 'text/plain'
-        runner.inline request, 'y', disposition: Module.HEAD, targetContentType: 'text/plain'
-        runner.inline request, 'z', disposition: Module.HEAD, targetContentType: 'text/plain'
+        runner.inline request, 'x', disposition: Renderer.HEAD, targetContentType: 'text/plain'
+        runner.inline request, 'y', disposition: Renderer.HEAD, targetContentType: 'text/plain'
+        runner.inline request, 'z', disposition: Renderer.HEAD, targetContentType: 'text/plain'
 
         def out = new StringWriter()
 
@@ -371,11 +371,11 @@ class BaseRunnerSpec extends Specification {
         setup:
         def request = [:]
         runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain',
-            disposition: Module.HEAD
+            disposition: Renderer.HEAD
         runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain',
-            disposition: Module.HEAD
+            disposition: Renderer.HEAD
         runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain',
-            disposition: Module.HEAD, requires: 'foo, bar'
+            disposition: Renderer.HEAD, requires: 'foo, bar'
 
         def out = new StringWriter()
 
@@ -438,11 +438,11 @@ class BaseRunnerSpec extends Specification {
         setup:
         def request = [:]
         runner.inline request, 'a', id: 'head1', targetContentType: 'text/plain',
-            disposition: Module.HEAD
+            disposition: Renderer.HEAD
         runner.inline request, 'b', id: 'head2', targetContentType: 'text/plain',
-            disposition: Module.HEAD
+            disposition: Renderer.HEAD
         runner.inline request, 'c', id: 'head3', targetContentType: 'text/plain',
-            disposition: Module.HEAD, requires: 'head1, head2'
+            disposition: Renderer.HEAD, requires: 'head1, head2'
         runner.inline request, 'i', id: 'foo', targetContentType: 'text/plain'
         runner.inline request, 'j', id: 'bar', targetContentType: 'text/plain'
         runner.inline request, 'k', id: 'baz', targetContentType: 'text/plain',
@@ -469,7 +469,7 @@ class BaseRunnerSpec extends Specification {
         runner.inline request, 'x', id: 'foo', targetContentType: 'text/plain'
         runner.inline request, 'y', id: 'bar', targetContentType: 'text/plain'
         runner.inline request, 'z', id: 'baz', targetContentType: 'text/plain',
-            disposition: Module.HEAD, requires: 'foo, bar'
+            disposition: Renderer.HEAD, requires: 'foo, bar'
 
         def out = new StringWriter()
 
@@ -603,9 +603,9 @@ class BaseRunnerSpec extends Specification {
     def "all modules in head when required modules have head disposition"() {
         setup:
         def request = [:]
-        runner.inline request, 'foo', disposition: Module.HEAD
-        runner.inline request, 'bar', disposition: Module.HEAD
-        runner.inline request, 'baz', disposition: Module.HEAD
+        runner.inline request, 'foo', disposition: Renderer.HEAD
+        runner.inline request, 'bar', disposition: Renderer.HEAD
+        runner.inline request, 'baz', disposition: Renderer.HEAD
 
         expect:
         runner.calculateHeadModules(request)*.targetContent == ['foo', 'bar', 'baz']
@@ -614,7 +614,7 @@ class BaseRunnerSpec extends Specification {
     def "head modules in head and foot in foot when required module with head disposition requires modules without"() {
         setup:
         runner.loader.modules = [
-            foo: new BaseModule(id: 'foo', disposition: Module.HEAD),
+            foo: new BaseModule(id: 'foo', disposition: Renderer.HEAD),
             bar: new BaseModule(id: 'bar'),
             baz: new BaseModule(id: 'baz'),
         ]
@@ -632,7 +632,7 @@ class BaseRunnerSpec extends Specification {
         runner.loader.modules = [
             foo: new BaseModule(id: 'foo'),
             bar: new BaseModule(id: 'bar'),
-            baz: new BaseModule(id: 'baz', disposition: Module.HEAD),
+            baz: new BaseModule(id: 'baz', disposition: Renderer.HEAD),
         ]
         runner.loader.modules.with { foo.requires = [ bar, baz ] }
 
@@ -646,9 +646,9 @@ class BaseRunnerSpec extends Specification {
     def "only required modules in head even when non-required modules are configured for head"() {
         setup:
         runner.loader.modules = [
-            foo: new BaseModule(id: 'foo', disposition: Module.HEAD),
+            foo: new BaseModule(id: 'foo', disposition: Renderer.HEAD),
             bar: new BaseModule(id: 'bar'),
-            baz: new BaseModule(id: 'baz', disposition: Module.HEAD),
+            baz: new BaseModule(id: 'baz', disposition: Renderer.HEAD),
         ]
         runner.loader.modules.with { foo.requires = [ bar ] }
         runner.loader.config.head.order = ['foo', 'bar', 'baz']
