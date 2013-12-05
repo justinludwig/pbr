@@ -2,7 +2,7 @@ package com.pitchstone.plugin.pbr.load
 
 import com.pitchstone.plugin.pbr.Module
 import java.util.regex.Pattern
-import org.apache.log4j.Logger
+import org.apache.commons.logging.Log
 
 /**
  * Singleton manager of PBR processing.
@@ -20,9 +20,9 @@ interface Loader {
     ConfigObject config
 
     /**
-     * Log4j logger instance.
+     * Commons log instance.
      */
-    Logger log
+    Log log
 
     /**
      * Map of all module ids to module definitions.

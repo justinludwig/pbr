@@ -3,7 +3,7 @@ package com.pitchstone.plugin.pbr.build.processor
 import com.pitchstone.plugin.pbr.Module
 import com.pitchstone.plugin.pbr.build.Builder
 import com.pitchstone.plugin.pbr.build.Processor
-import org.apache.log4j.Logger
+import org.apache.commons.logging.Log
 
 /**
  * Fills in the lastModified date for each module
@@ -47,7 +47,7 @@ class FillInLastModified implements Processor {
         builder?.loader?.config?.processor?.FillInLastModified?.localOnly != false
     }
 
-    Logger getLog() {
+    Log getLog() {
         builder?.loader?.log
     }
 

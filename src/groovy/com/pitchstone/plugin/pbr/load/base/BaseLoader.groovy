@@ -7,7 +7,8 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 import java.util.regex.Pattern
-import org.apache.log4j.Logger
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.impl.SLF4JLogFactory
 
 /**
  * Base loader implementation.
@@ -16,7 +17,7 @@ import org.apache.log4j.Logger
 class BaseLoader implements Loader {
 
     ConfigObject config
-    Logger log
+    Log log
     Map<String,Module> modules
     List<Pattern> headPatterns
     List<Pattern> footPatterns
@@ -26,7 +27,6 @@ class BaseLoader implements Loader {
     }
 
     BaseLoader(Map config) {
-        log = Logger.getLogger(getClass())
         setConfig config
     }
 
@@ -54,6 +54,12 @@ class BaseLoader implements Loader {
         modules = null
         headPatterns = null
         footPatterns = null
+    }
+
+    Log getLog() {
+        if (!log)
+            log = new SLF4JLogFactory().getInstance(this.class)
+        return log
     }
 
     List<Pattern> getHeadPatterns() {
@@ -183,7 +189,7 @@ class BaseLoader implements Loader {
         state.modules.values().each { resolveModuleRequirements state, it }
 
         if (!state.modules)
-            log.warn "no PBR modules configured"
+            getLog().warn "no PBR modules configured"
 
         return state.modules
     }
