@@ -1,6 +1,7 @@
 
+/*
 // file from which to load config properties
-preBuiltResourcesConfigFile = 'grails-app/conf/PreBuildResourcesConfig.groovy'
+preBuiltResourcesConfigFile = 'grails-app/conf/PbrConfig.groovy'
 // additional properties from build script to override config file properties
 preBuiltResourcesConfigProperties = [:]
 
@@ -10,4 +11,5 @@ eventCreateWarStart = { warLocation, stagingDir ->
     config.addAll preBuiltResourcesConfigProperties
     com.pitchstone.plugin.pbr.PBR.process config
 }
+*/
 
