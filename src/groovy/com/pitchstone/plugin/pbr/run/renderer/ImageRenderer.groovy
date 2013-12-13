@@ -36,6 +36,7 @@ class ImageRenderer implements Renderer {
             out << '<link' << runner.tools.attrs(
                 href: url,
                 rel: module.params.rel ?: 'icon',
+                sizes: module.params.sizes,
                 title: module.params.title,
             ) << '>'
         else

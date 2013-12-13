@@ -64,9 +64,10 @@ class ImageRendererSpec extends Specification {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(
             targetUrl: '/foo.png',
-            params: [rel: 'shortcut icon', title: 'Foo'],
+            params: [rel: 'shortcut icon', title: 'Foo', sizes: '16x16 32x32'],
         ), Renderer.HEAD
-        then: out.toString() == '<link href="/foo.png" rel="shortcut icon" title="Foo">'
+        then: out.toString() ==
+            '<link href="/foo.png" rel="shortcut icon" sizes="16x16 32x32" title="Foo">'
     }
 
     def "render head disposition content as data url in href attr of link tag"() {
