@@ -60,10 +60,10 @@ class MetaRendererSpec extends Specification {
         then: out.toString() == '<meta foo="bar" content="baz">'
     }
 
-    def "render properties param as multiple meta tags"() {
+    def "render props param as multiple meta tags"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(params: [
-            properties: [
+            props: [
                 author: 'TimBL',
                 keywords: 'world, wide, web',
             ],
@@ -74,11 +74,11 @@ class MetaRendererSpec extends Specification {
         '''.trim().replaceAll(/>\s+</, '><')
     }
 
-    def "render properties param as multiple meta tags with standard key"() {
+    def "render props param as multiple meta tags with standard key"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(params: [
             itemprop: true,
-            properties: [
+            props: [
                 author: 'TimBL',
                 keywords: 'world, wide, web',
             ],
@@ -89,11 +89,11 @@ class MetaRendererSpec extends Specification {
         '''.trim().replaceAll(/>\s+</, '><')
     }
 
-    def "render properties param as multiple meta tags with custom key"() {
+    def "render props param as multiple meta tags with custom key"() {
         setup: def out = new StringWriter()
         when: renderer.render [:], out, new BaseModule(params: [
             key: 'foo',
-            properties: [
+            props: [
                 author: 'TimBL',
                 keywords: 'world, wide, web',
             ],

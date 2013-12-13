@@ -14,7 +14,7 @@ class MetaRenderer implements Renderer {
 
     void render(request, Writer out, Module module, String disposition = null) {
         def params = module.params
-        def properties = params.properties
+        def properties = params.props
         def content = module.targetContent ?: module.targetUrl
 
         if (!properties && !content) {
