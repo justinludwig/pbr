@@ -174,11 +174,15 @@ Helps manage static resources, building them out when the app is packaged.
      * Does the actual config reloading, if scheduled.
      */
     def doReloadConfig() {
-        if (reloadConfigFlag) {
+        if (!reloadConfigFlag) return
+        reloadConfigFlag = false
+
+        try {
             if (config.reloadOnConfigChange)
                 service.reloadConfig()
-
             updateReloadInterval()
+        } catch (Throwable t) {
+            log.error "error reloading config", t
         }
     }
 
@@ -212,8 +216,12 @@ Helps manage static resources, building them out when the app is packaged.
             service.loader.getModuleForSourceUrl path
         }.findAll { it }
 
-        if (toProcess)
-            service.process toProcess
+        try {
+            if (toProcess)
+                service.process toProcess
+        } catch (Throwable t) {
+            log.error "error reloading modules ${toProcess*.id}", t
+        }
     }
 
     def updateReloadInterval() {
