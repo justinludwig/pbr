@@ -1,0 +1,5 @@
+Pre-Built Resources
+===================
+
+This grails plugin helps manage static resources like javascript, css, and images, building them out when the app is packaged.
+

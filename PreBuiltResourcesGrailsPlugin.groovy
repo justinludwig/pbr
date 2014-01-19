@@ -1,6 +1,6 @@
 
-import com.pitchstone.plugin.pbr.PBR
-import com.pitchstone.plugin.pbr.run.servlet.TargetDirServingFilter
+import org.c02e.plugin.pbr.PBR
+import org.c02e.plugin.pbr.run.servlet.TargetDirServingFilter
 import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 import org.springframework.core.io.FileSystemResource
 import org.springframework.web.filter.DelegatingFilterProxy
@@ -27,7 +27,7 @@ class PreBuiltResourcesGrailsPlugin {
 
     def title = "Pre-Built Resources"
     def author = "Justin Ludwig"
-    def authorEmail = "justin@pitchstonetechnology.com"
+    def authorEmail = "justin@codetechnology.org"
     def description = '''
 Helps manage static resources, building them out when the app is packaged.
     '''
@@ -42,8 +42,8 @@ Helps manage static resources, building them out when the app is packaged.
 
     // Details of company behind the plugin (if there is one)
     def organization = [
-        name: "PitchStone Technology",
-        url: "http://www.pitchstonetechnology.com/",
+        name: "CODE Technology",
+        url: "http://codesurvey.org/",
     ]
 
     // Any additional developers beyond the author specified above.

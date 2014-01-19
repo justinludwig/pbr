@@ -29,6 +29,6 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
     warn   'org.mortbay.log'
-    all    'com.pitchstone',
+    all    'org.c02e',
            'grails.app'
 }

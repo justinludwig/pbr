@@ -9,7 +9,7 @@ eventCreateWarStart = { warLocation, stagingDir ->
     def config = new ConfigSlurper().parse(new File(preBuiltResourcesConfigFile))
     config.grails.plugins.preBuiltResources.targetDir = stagingDir
     config.addAll preBuiltResourcesConfigProperties
-    com.pitchstone.plugin.pbr.PBR.process config
+    org.c02e.plugin.pbr.PBR.process config
 }
 */
 
