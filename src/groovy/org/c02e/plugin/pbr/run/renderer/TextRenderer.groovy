@@ -17,7 +17,7 @@ class TextRenderer implements Renderer {
         def content = stripPrologue(module.targetContent)
         def url = module.targetUrl
         if (!content && !url) {
-            runner.loader.log.info "no text to render for module $module.id"
+            runner.loader.log.debug "no text to render for module $module.id"
             return
         }
 

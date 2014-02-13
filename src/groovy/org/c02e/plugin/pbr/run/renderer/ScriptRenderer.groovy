@@ -18,7 +18,7 @@ class ScriptRenderer implements Renderer {
 
         // nothing to render
         if (!content && !src) {
-            runner.loader.log.info "no script to render for module $module.id"
+            runner.loader.log.debug "no script to render for module $module.id"
             return
         }
 

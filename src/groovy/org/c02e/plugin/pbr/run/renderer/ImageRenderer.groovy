@@ -27,7 +27,7 @@ class ImageRenderer implements Renderer {
 
         // nothing to render
         if (!url) {
-            runner.loader.log.info "no image to render for module $module.id"
+            runner.loader.log.debug "no image to render for module $module.id"
             return
         }
 

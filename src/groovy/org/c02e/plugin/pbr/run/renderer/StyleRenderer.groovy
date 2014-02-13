@@ -16,7 +16,7 @@ class StyleRenderer implements Renderer {
         def content = module.targetContent
         def url = module.targetUrl
         if (!content && !url) {
-            runner.loader.log.info "no style to render for module $module.id"
+            runner.loader.log.debug "no style to render for module $module.id"
             return
         }
 

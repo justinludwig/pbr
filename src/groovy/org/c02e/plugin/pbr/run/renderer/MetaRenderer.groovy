@@ -18,7 +18,7 @@ class MetaRenderer implements Renderer {
         def content = module.targetContent ?: module.targetUrl
 
         if (!properties && !content) {
-            runner.loader.log.info "no properties to render for module $module.id"
+            runner.loader.log.debug "no properties to render for module $module.id"
             return
         }
 
