@@ -48,6 +48,7 @@ class PBR {
             ],
         ],
         manifest: 'target/pbr-modules.json',
+        processOnCreateWar: true,
         reloadInterval: 1000, // ms to check for changes
         reloadOnConfigChange: true,
         sourceDir: 'web-app',
