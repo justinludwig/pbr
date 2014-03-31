@@ -17,6 +17,13 @@ class PbrTestHelper {
             sourceDir: "$tmp/source",
             targetDir: "$tmp/target",
             workingDir: "$tmp/work",
+            module: [
+                definition: [:],
+                hook: '''
+                    org.c02e.plugin.pbr.load.hook.StarSubModuleHook
+                    org.c02e.plugin.pbr.load.hook.SimpleModuleHook
+                ''',
+            ]
         ]
     }
 

@@ -87,4 +87,9 @@ interface Loader {
      */
     List<Pattern> footPatterns
 
+    /**
+     * Returns deep copy of specified (config) map.
+     */
+    Map deepCopy(Map map)
+
 }

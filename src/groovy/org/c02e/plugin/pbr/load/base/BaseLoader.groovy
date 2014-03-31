@@ -3,6 +3,7 @@ package org.c02e.plugin.pbr.load.base
 import org.c02e.plugin.pbr.Module
 import org.c02e.plugin.pbr.PBR
 import org.c02e.plugin.pbr.load.Loader
+import org.c02e.plugin.pbr.load.LoaderHook
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
@@ -21,6 +22,7 @@ class BaseLoader implements Loader {
     Map<String,Module> modules
     List<Pattern> headPatterns
     List<Pattern> footPatterns
+    List<LoaderHook> hooks
 
     BaseLoader() {
         this([:])
@@ -84,7 +86,7 @@ class BaseLoader implements Loader {
 
     Map<String,Module> getModules() {
         if (modules == null)
-            modules = loadModuleDefinitions(config.module.definition)
+            modules = loadModuleDefinitions(deepCopy(config.module.definition))
         return modules
     }
 
@@ -114,7 +116,7 @@ class BaseLoader implements Loader {
         if (!modules || this.modules == null) return
 
         // reload all module definitions from config
-        def all = loadModuleDefinitions(config.module.definition)
+        def all = loadModuleDefinitions(deepCopy(config.module.definition))
         // extract the updated modules
         def updated = modules.inject([:]) { map, module ->
             map[module.id] = all[module.id]; map
@@ -136,6 +138,14 @@ class BaseLoader implements Loader {
         }
 
         updated.values()
+    }
+
+    Map deepCopy(Map map) {
+        map.inject([:]) { dst, entry ->
+            def v = entry.value
+            dst[entry.key] = v instanceof Map ? deepCopy(v) : v
+            return dst
+        }
     }
 
     // impl
@@ -180,18 +190,22 @@ class BaseLoader implements Loader {
     }
 
     Map<String,Module> loadModuleDefinitions(Map definitions) {
+        // run pre hooks
+        definitions = getHooks().inject(definitions) { dfns, hook -> hook.pre dfns }
+
         def state = [
             modules: [:],
             requirements: [:],
             stack: [],
         ]
-        loadModuleDefinition state, '', definitions
+        definitions.each { k,v -> loadModuleDefinition state, k, v }
         state.modules.values().each { resolveModuleRequirements state, it }
 
         if (!state.modules)
             getLog().warn "no PBR modules configured"
 
-        return state.modules
+        // run post hooks
+        getHooks().inject(state.modules) { mods, hook -> hook.post mods }
     }
 
     void loadModuleDefinition(state, String id, props, parentProps = null) {
@@ -199,56 +213,36 @@ class BaseLoader implements Loader {
 
         def subId = { id ? "${id}.${it}" : it }
 
-        if (props instanceof Map) {
-            // is a module definition
-            if (id) {
-                // syntax sugar: all props are submodules
-                if (props.submodules == '*')
-                    props = [submodules: props - [submodules: '*']]
+        // create module from properties
+        def p = [:]
+        if (parentProps)
+            p.putAll parentProps.findAll { k,v -> k != 'requires' }
 
-                // create module from properties
-                def p = [:]
-                if (parentProps)
-                    p.putAll parentProps.findAll { k,v -> k != 'requires' }
+        p.id = id
+        p.putAll props.findAll { k,v ->
+            // skip empty and special props
+            v && k != 'submodules' && k != 'requires'
+        }
+        state.modules[id] = createModule(p)
 
-                p.id = id
-                p.putAll props.findAll { k,v ->
-                    // skip empty and special props
-                    v && k != 'submodules' && k != 'requires'
-                }
-                state.modules[id] = createModule(p)
+        state.requirements[id] = concatModuleRequirements(
+            props.requires, parentProps?.requires,
+            props.submodules?.keySet()?.collect { subId it }?.join(' '))
 
-                state.requirements[id] = concatModuleRequirements(
-                    props.requires, parentProps?.requires,
-                    props.submodules?.keySet()?.collect { subId it }?.join(' '))
+        // load sub-modules from 'submodules' property
+        if (props.submodules) {
+            // create new parentProps from this module's props and its parent
+            def pp = [:]
+            if (parentProps)
+                pp.putAll parentProps.findAll { k,v -> k != 'requires' }
 
-                // load sub-modules from 'submodules' property
-                if (props.submodules) {
-                    // create new parentProps from this module's props and its parent
-                    def pp = [:]
-                    if (parentProps)
-                        pp.putAll parentProps.findAll { k,v -> k != 'requires' }
-
-                    pp.putAll props.findAll { k,v ->
-                        // skip empty and special props
-                        v && k != 'submodules'
-                    }
-                    props.submodules.each { module ->
-                        def moduleId = id ? "${id}.${module.key}" : module.key
-                        loadModuleDefinition state, subId(module.key), module.value, pp
-                    }
-                }
-
-            // not a module definition: load sub-modules from properties
-            } else {
-                props.each { module ->
-                    loadModuleDefinition state, subId(module.key), module.value, parentProps
-                }
+            pp.putAll props.findAll { k,v ->
+                // skip empty and special props
+                v && k != 'submodules'
             }
-
-        // simple definition, like "jquery = 'js/jquery.js'"
-        } else {
-            loadModuleDefinition state, id, [url: props as String], parentProps
+            props.submodules.each { module ->
+                loadModuleDefinition state, subId(module.key), module.value, pp
+            }
         }
     }
 
@@ -308,6 +302,39 @@ class BaseLoader implements Loader {
         Pattern.compile dfn.split(/\*/, -1).collect { 
             it ? Pattern.quote(it) : ''
         }.join('.*')
+    }
+
+    List<LoaderHook> getHooks() {
+        if (hooks == null)
+            loadHooks()
+        return hooks
+    }
+
+    void loadHooks() {
+        def cnf = config.module.hook
+        if (!cnf) {
+            hooks = []
+            log?.warn "no PBR load hooks configured"
+            return
+        }
+
+        if (!(cnf instanceof Collection))
+            cnf = cnf.toString().split(/\n/)
+        hooks = cnf.collect { it?.trim() }.findAll { it }.
+            collect { loadHook it }
+
+        if (!hooks)
+            log?.warn "no PBR load hooks configured"
+    }
+
+    LoaderHook loadHook(String dfn) {
+        def parts = dfn.split(/\s+/)
+        def cls = Thread.currentThread().contextClassLoader.loadClass(parts[0])
+        def hook = cls.newInstance()
+
+        hook.loader = this
+        hook.name = parts.length > 1 ? parts.tail().join(' ') : cls.simpleName
+        return hook
     }
 
 }

@@ -39,6 +39,12 @@ foot {
 }
 
 module {
+    hook = '''
+        org.c02e.plugin.pbr.load.hook.StarSubModuleHook
+        org.c02e.plugin.pbr.load.hook.SimpleModuleHook
+        org.c02e.plugin.pbr.load.hook.StarUrlHook
+    '''
+
     definition {
 
         application {

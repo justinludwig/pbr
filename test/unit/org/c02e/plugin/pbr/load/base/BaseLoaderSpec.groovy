@@ -29,13 +29,7 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with one simple definition has basic properties"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: 'js/jquery.js'
-                ]
-            ]
-        ]
+        loader.config.module.definition = [jquery: 'js/jquery.js']
         then:
         loader.modules.size() == 1
         loader.modules.jquery
@@ -55,6 +49,7 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with complex ConfigObject definition has basic properties"() {
         when:
+        loader.config.module.definition = new ConfigObject()
         loader.config.module.definition.jquery.url = 'js/jquery.js'
         loader.config.module.definition.jquery.contentType = 'application/javascript'
         then:
@@ -68,14 +63,10 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with custom content-type has basic properties"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'js/jquery.js',
-                        contentType: 'application/javascript',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'js/jquery.js',
+                contentType: 'application/javascript',
             ]
         ]
         then:
@@ -89,13 +80,9 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with unknown content-type has only urls"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'less/main.less',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'less/main.less',
             ]
         ]
         then:
@@ -107,15 +94,11 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with custom target properties has basic properties"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'js/jquery.js',
-                        targetUrl: 'common/js/jquery.js',
-                        targetContentType: 'application/javascript',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'js/jquery.js',
+                targetUrl: 'common/js/jquery.js',
+                targetContentType: 'application/javascript',
             ]
         ]
         then:
@@ -129,15 +112,11 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with two submodules has three modules"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    'jquery-ui': [
-                        submodules: [
-                            css: 'css/jquery-ui-smoothness.css',
-                            js: 'js/jquery-ui.js',
-                        ]
-                    ]
+        loader.config.module.definition = [
+            'jquery-ui': [
+                submodules: [
+                    css: 'css/jquery-ui-smoothness.css',
+                    js: 'js/jquery-ui.js',
                 ]
             ]
         ]
@@ -154,15 +133,11 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with two submodules via star syntax has three modules"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    'jquery-ui': [
-                        submodules: '*',
-                        css: 'css/jquery-ui-smoothness.css',
-                        js: 'js/jquery-ui.js',
-                    ]
-                ]
+        loader.config.module.definition = [
+            'jquery-ui': [
+                submodules: '*',
+                css: 'css/jquery-ui-smoothness.css',
+                js: 'js/jquery-ui.js',
             ]
         ]
         then:
@@ -178,16 +153,12 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with whitespace-filled requirement requires nothing"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        requires: '''
+        loader.config.module.definition = [
+            jquery: [
+                requires: '''
 
-                        ''',
-                        url: 'js/jquery.js',
-                    ]
-                ]
+                ''',
+                url: 'js/jquery.js',
             ]
         ]
         then:
@@ -199,14 +170,10 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with missing requirement throws exception"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        url: 'js/jquery-ui.js',
-                    ]
-                ]
+        loader.config.module.definition = [
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
             ]
         ]
         loader.modules
@@ -216,18 +183,14 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with looping requirement throws exception"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        requires: 'jquery-ui',
-                        url: 'js/jquery.js',
-                    ],
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        url: 'js/jquery-ui.js',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                requires: 'jquery-ui',
+                url: 'js/jquery.js',
+            ],
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
             ]
         ]
         loader.modules
@@ -237,17 +200,13 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with one requirement resolves it"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'js/jquery.js',
-                    ],
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        url: 'js/jquery-ui.js',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'js/jquery.js',
+            ],
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
             ]
         ]
         then:
@@ -263,17 +222,13 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with one requirement in a list resolves it"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'js/jquery.js',
-                    ],
-                    'jquery-ui': [
-                        requires: ['jquery'],
-                        url: 'js/jquery-ui.js',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'js/jquery.js',
+            ],
+            'jquery-ui': [
+                requires: ['jquery'],
+                url: 'js/jquery-ui.js',
             ]
         ]
         then:
@@ -285,17 +240,13 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with one requirement in a list with whitespace resolves it"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'js/jquery.js',
-                    ],
-                    'jquery-ui': [
-                        requires: ['', ' jquery ', ' '],
-                        url: 'js/jquery-ui.js',
-                    ]
-                ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'js/jquery.js',
+            ],
+            'jquery-ui': [
+                requires: ['', ' jquery ', ' '],
+                url: 'js/jquery-ui.js',
             ]
         ]
         then:
@@ -307,15 +258,11 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with two submodules has two requirements"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    'jquery-ui': [
-                        submodules: [
-                            css: 'css/jquery-ui-smoothness.css',
-                            js: 'js/jquery-ui.js',
-                        ]
-                    ]
+        loader.config.module.definition = [
+            'jquery-ui': [
+                submodules: [
+                    css: 'css/jquery-ui-smoothness.css',
+                    js: 'js/jquery-ui.js',
                 ]
             ]
         ]
@@ -327,19 +274,15 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with two submodules and one requirement has three requirements"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    jquery: [
-                        url: 'js/jquery.js',
-                    ],
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        submodules: [
-                            css: 'css/jquery-ui-smoothness.css',
-                            js: 'js/jquery-ui.js',
-                        ]
-                    ]
+        loader.config.module.definition = [
+            jquery: [
+                url: 'js/jquery.js',
+            ],
+            'jquery-ui': [
+                requires: 'jquery',
+                submodules: [
+                    css: 'css/jquery-ui-smoothness.css',
+                    js: 'js/jquery-ui.js',
                 ]
             ]
         ]
@@ -358,20 +301,16 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with hierarchical requirements are resolved"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    app: [
-                        requires: 'jquery-ui',
-                        url: 'js/app.js',
-                    ],
-                    jquery: 'js/jquery.js',
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        url: 'js/jquery-ui.js',
-                    ],
-                ]
-            ]
+        loader.config.module.definition = [
+            app: [
+                requires: 'jquery-ui',
+                url: 'js/app.js',
+            ],
+            jquery: 'js/jquery.js',
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
+            ],
         ]
         then:
         loader.modules.size() == 3
@@ -384,20 +323,16 @@ class BaseLoaderSpec extends Specification {
 
     def "getModules with duplicate requirements are resolved"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    app: [
-                        requires: ' jquery-ui jquery jquery-ui ',
-                        url: 'js/app.js',
-                    ],
-                    jquery: 'js/jquery.js',
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        url: 'js/jquery-ui.js',
-                    ],
-                ]
-            ]
+        loader.config.module.definition = [
+            app: [
+                requires: ' jquery-ui jquery jquery-ui ',
+                url: 'js/app.js',
+            ],
+            jquery: 'js/jquery.js',
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
+            ],
         ]
         then:
         loader.modules.size() == 3
@@ -452,20 +387,16 @@ class BaseLoaderSpec extends Specification {
 
     def "one module with hierarchical requirements is reverted individually"() {
         when:
-        loader.config = [
-            module: [
-                definition: [
-                    app: [
-                        requires: 'jquery-ui',
-                        url: 'js/app.js',
-                    ],
-                    jquery: 'js/jquery.js',
-                    'jquery-ui': [
-                        requires: 'jquery',
-                        url: 'js/jquery-ui.js',
-                    ],
-                ]
-            ]
+        loader.config.module.definition = [
+            app: [
+                requires: 'jquery-ui',
+                url: 'js/app.js',
+            ],
+            jquery: 'js/jquery.js',
+            'jquery-ui': [
+                requires: 'jquery',
+                url: 'js/jquery-ui.js',
+            ],
         ]
         loader.modules.'jquery-ui'.targetUrl = 'foo.js'
         loader.revert([loader.modules.'jquery-ui'])

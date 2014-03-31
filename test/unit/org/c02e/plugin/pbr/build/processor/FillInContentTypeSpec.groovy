@@ -102,23 +102,14 @@ class FillInContentTypeSpec extends Specification {
 
     def "builder processAll sets the contentType for all modules"() {
         when:
-        processor.builder.loader.config = [
-            module: [
-                definition: [
-                    'jquery-ui': [
-                        submodules: [
-                            css: 'css/jquery-ui-smoothness.css',
-                            js: 'js/jquery-ui.js',
-                        ]
-                    ]
-                ]
-            ],
-            processor: [
-                order: [
-                    'org.c02e.plugin.pbr.build.processor.FillInContentType',
-                ],
-            ]
+        processor.builder.loader.config.module.definition.'jquery-ui' = [
+            submodules: '*',
+            css: 'css/jquery-ui-smoothness.css',
+            js: 'js/jquery-ui.js',
         ]
+        processor.builder.loader.config.processor.order = '''
+            org.c02e.plugin.pbr.build.processor.FillInContentType
+        '''
         processor.builder.processAll()
         then:
         processor.builder.loader.modules.'jquery-ui'.sourceContentType == null
