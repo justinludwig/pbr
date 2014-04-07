@@ -55,6 +55,15 @@ module {
             }
         }
 
+        image {
+            submodules = '*'
+            application {
+                url = 'images/test/app.jpg'
+                alt = 'The App'
+                title = 'Grails Rocks!'
+            }
+        }
+
         jquery = "${googlejs}/jquery/1.10.2/jquery.min.js"
         'jquery-ui-css-redmond' {
             url = "${googlejs}/jqueryui/1.10.3/themes/redmond/jquery-ui.css"
