@@ -48,11 +48,16 @@ class PBR {
             ],
         ],
         manifest: 'target/pbr-modules.json',
-        processOnCreateWar: true,
         reloadInterval: 1000, // ms to check for changes
         reloadOnConfigChange: true,
         sourceDir: 'web-app',
         targetDir: 'target/static',
+        // settings for eventCreateWarStart script
+        war: [
+            onCreateWarStart: true,
+            manifest: 'WEB-INF/pbr-modules.json',
+            targetDir: 'static',
+        ],
         // workingDir: "${System.properties.'java.io.tmpdir'}/pbr",
     ]
 

@@ -8,12 +8,12 @@ eventCleanStart = {
 eventCreateWarStart = { warLocation, stagingDir ->
     def cnf = config?.grails?.plugins?.preBuiltResources
     // automatically build unless explicitly disabled
-    if (cnf?.processOnCreateWar == false) return
+    if (!cnf || cnf.war?.onCreateWarStart == false) return
 
     def PBR = org.c02e.plugin.pbr.PBR
-    def targetDir = cnf.targetDir ?: PBR.BASE_CONFIG.targetDir
+    def targetDir = cnf.war?.targetDir ?: PBR.BASE_CONFIG.war.targetDir
     cnf.targetDir = "${stagingDir}/${targetDir}"
-    def manifest = cnf.manifest ?: PBR.BASE_CONFIG.manifest
+    def manifest = cnf.war?.manifest ?: PBR.BASE_CONFIG.war.manifest
     cnf.manifest = "${stagingDir}/${manifest}"
 
     PBR.process cnf
