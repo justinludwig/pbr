@@ -32,10 +32,9 @@ class StarUrlHook implements LoaderHook {
     Map pre(Map moduleConfig) {
         if (!moduleConfig) return moduleConfig
 
-        def sourcePath = loader?.config?.sourceDir ?: ''
-        def sourceDir = new File(sourcePath)
-        if (sourcePath)
-            sourcePath += '/'
+        def sourcePath = this.sourcePath
+        def sourceDir = this.sourceDir
+        def inExcludes = buildFilter(excludes, sourcePath)
 
         // recurse into submodules
         moduleConfig.each { k,v ->
@@ -50,30 +49,13 @@ class StarUrlHook implements LoaderHook {
         }.each { k,v ->
             // remove existing module
             def module = moduleConfig.remove(k)
-            def url = module.url
-            def filter = url
-
-            if (!(url instanceof Closure)) {
-                // if not regex, quote everything in url as regex
-                // except ** (replace with .*) // and * (replace with [^/]*)
-                def pattern = url instanceof Pattern ? url : Pattern.compile(
-                    /\Q$url\E/.replaceAll(/\*+/) {
-                            it.length() > 1 ? /\E.*\Q/ : /\E[^\/]*\Q/
-                    }.replaceAll(/\\Q\\E/, '')
-                )
-                // build closure to compare url pattern
-                // with file path (after removing source-dir path)
-                filter = { File file ->
-                    def path = file.path
-                    if (sourcePath && path.startsWith(sourcePath))
-                        path = path.substring(sourcePath.length())
-                    path ==~ pattern
-                }
-            }
+            def filter = buildFilter(module.url, sourcePath)
 
             // filter all files in source dir
             def files = []
-            sourceDir.eachFileRecurse(FileType.FILES) { if (filter(it)) files << it }
+            sourceDir.eachFileRecurse(FileType.FILES) {
+                if (!inExcludes(it) && filter(it)) files << it
+            }
             if (!files) return
 
             // replace existing module with submodules only
@@ -88,7 +70,8 @@ class StarUrlHook implements LoaderHook {
             // add new submodule for each matching file
             files.each { file ->
                 def submodule = loader.deepCopy(module)
-                def id = file.path.substring(commonPath.length()).replaceAll('/', '.')
+                def id = file.path.substring(commonPath.length()).
+                    replaceAll('/', '.').replaceAll(' ', '_')
                 submodule.url = file.path.substring(sourcePath.length())
                 submodules[id] = submodule
             }
@@ -99,6 +82,43 @@ class StarUrlHook implements LoaderHook {
 
     Map<String,Module> post(Map<String,Module> modules) {
         return modules
+    }
+
+    File getSourceDir() {
+        new File(loader?.config?.sourceDir ?: '')
+    }
+
+    String getSourcePath() {
+        def s = loader?.config?.sourceDir ?: ''
+        if (s)
+            s += '/'
+        return s
+    }
+
+    /** Default: exclude if path starts with '.' or contains '/.' anywhere. */
+    def getExcludes() {
+        loader?.config?.module?.StarUrlHook?.excludes ?: ~/^\..*|.*\/\..*/
+    }
+
+    Closure buildFilter(filter, String sourcePath = this.sourcePath) {
+        if (filter instanceof Closure) return filter
+
+        // if not regex, quote everything in filter as regex
+        // except ** (replace with .*) // and * (replace with [^/]*)
+        def pattern = filter instanceof Pattern ? filter : Pattern.compile(
+            /\Q$filter\E/.replaceAll(/\*+/) {
+                    it.length() > 1 ? /\E.*\Q/ : /\E[^\/]*\Q/
+            }.replaceAll(/\\Q\\E/, '')
+        )
+
+        // build closure to compare filter pattern
+        // with file path (after removing source-dir path)
+        { File file ->
+            def path = file.path
+            if (sourcePath && path.startsWith(sourcePath))
+                path = path.substring(sourcePath.length())
+            path ==~ pattern
+        }
     }
 
 }

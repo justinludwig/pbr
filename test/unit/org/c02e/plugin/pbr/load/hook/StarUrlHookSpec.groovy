@@ -225,6 +225,79 @@ class StarUrlHookSpec extends Specification {
         ] ]
     }
 
+    def "pre with match replaces slashes and dots in submodule names"() {
+        setup:
+            def dir = sourceDir
+            '''
+                a/b/c/d
+                a/e/f/g
+            '''.trim().split(/\s+/).each {
+                new File(dir, "${it} foo bar baz.js").with {
+                    parentFile.mkdirs(); delegate
+                } << "alert('${it}')"
+            }
+
+        expect: hook.pre(x:[url:'a/**.js']) == [x: [
+            submodules: [
+                'b.c.d_foo_bar_baz.js': [url:'a/b/c/d foo bar baz.js'],
+                'e.f.g_foo_bar_baz.js': [url:'a/e/f/g foo bar baz.js'],
+            ],
+        ] ]
+    }
+
+    def "pre skips files in default excludes"() {
+        setup:
+            def dir = sourceDir
+            '''
+                .n1.js
+                .a/n2.js
+                .a/.n3.js
+                a/.n4.js
+                a/.b/n5.js
+                a/.b/.n6.js
+                a/b/y1.js
+            '''.trim().split(/\s+/).each {
+                new File(dir, it).with {
+                    parentFile.mkdirs(); delegate
+                } << "alert('${it}')"
+            }
+
+        expect: hook.pre(x:[url:'**.js']) == [x: [
+            submodules: [
+                'y1.js': [url:'a/b/y1.js'],
+            ],
+        ] ]
+    }
+
+    def "pre skips files in custom excludes"() {
+        setup:
+            config.module.StarUrlHook = [excludes: '**.svn**']
+            def dir = sourceDir
+            '''
+                .y1.js
+                .a/y2.js
+                .a/.y3.js
+                .svn/n1.js
+                .svn/.n2.js
+                .svn/a/n3.js
+                a/.svn/n4.js
+                a/.svn/.n4.js
+                .a/.svn/.n4.js
+            '''.trim().split(/\s+/).each {
+                new File(dir, it).with {
+                    parentFile.mkdirs(); delegate
+                } << "alert('${it}')"
+            }
+
+        expect: hook.pre(x:[url:'**.js']) == [x: [
+            submodules: [
+                '.y1.js': [url:'.y1.js'],
+                '.a.y2.js': [url:'.a/y2.js'],
+                '.a..y3.js': [url:'.a/.y3.js'],
+            ],
+        ] ]
+    }
+
 
     protected getConfig() {
         hook.loader.config
