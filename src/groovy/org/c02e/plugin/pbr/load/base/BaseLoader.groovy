@@ -81,7 +81,12 @@ class BaseLoader implements Loader {
     }
 
     Module getModuleForTargetUrl(String url) {
-        getModules().values().find { it.targetUrl == url }
+        def module = getModules().values().find { it.targetUrl == url }
+        if (module) return module
+
+        // try to match without query strings
+        url = url?.replaceFirst(/\?.*/, '')
+        getModules().values().find { it.targetUrl?.replaceFirst(/\?.*/, '') == url }
     }
 
     Map<String,Module> getModules() {

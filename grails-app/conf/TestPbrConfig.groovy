@@ -13,6 +13,7 @@ processor {
         org.c02e.plugin.pbr.build.processor.FillInDisposition
         org.c02e.plugin.pbr.build.processor.FillInLastModified
         org.c02e.plugin.pbr.build.processor.ApplyBaseUrl
+        org.c02e.plugin.pbr.build.processor.AppendVersionQueryParam
         org.c02e.plugin.pbr.build.processor.DeployToTargetDir
     '''
 }
