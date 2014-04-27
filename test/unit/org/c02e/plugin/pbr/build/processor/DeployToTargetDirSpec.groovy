@@ -58,7 +58,7 @@ class DeployToTargetDirSpec extends Specification {
         new File(targetDir, 'bar.css').text == 'test'
     }
 
-    def "process with relative base url applied to target url copies built file to target dir"() {
+    def "process with relative base url applied to target url copies built file"() {
         setup:
         config.baseUrl = '/example'
         def builtFile = getTempFile('foo.css', 'test')
@@ -73,13 +73,27 @@ class DeployToTargetDirSpec extends Specification {
         new File(targetDir, 'bar.css').text == 'test'
     }
 
-    def "process with http base url applied to target url copies built file to target dir"() {
+    def "process with http base url applied to target url copies built file"() {
         setup:
         config.baseUrl = 'http://example.com/'
         def builtFile = getTempFile('foo.css', 'test')
         def module = new BaseModule(
             builtUrl: builtFile.path,
             targetUrl: 'http://example.com/bar.css',
+        )
+        when:
+        processor.process module
+        then:
+        targetDir.list() == ['bar.css']
+        new File(targetDir, 'bar.css').text == 'test'
+    }
+
+    def "process with query string in target url copies built file"() {
+        setup:
+        def builtFile = getTempFile('foo.css', 'test')
+        def module = new BaseModule(
+            builtUrl: builtFile.path,
+            targetUrl: 'bar.css?q=p&x',
         )
         when:
         processor.process module

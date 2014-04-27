@@ -29,6 +29,8 @@ class DeployToTargetDir implements Processor {
         if (!builder?.tools?.isLocalFile(dstUrl)) return
 
         def srcFile = builder.tools.getWorkingFile(module)
+        // remove query params from file
+        dstUrl = dstUrl.replaceFirst(/\?.*/, '')
         def dstFile = new File(targetDir, dstUrl)
 
         // copy src to dst
