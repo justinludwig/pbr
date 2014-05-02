@@ -359,6 +359,8 @@ class BaseRunner implements Runner {
         // remove baseUrl from targetUrl to get back to deployment path
         if (url && url.startsWith(baseUrl))
             url = url.substring(baseUrl.length())
+        // remove query params from file
+        url = url?.replaceFirst(/\?.*/, '')
 
         new File(targetDir, url)
     }

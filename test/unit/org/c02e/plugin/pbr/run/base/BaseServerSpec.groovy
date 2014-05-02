@@ -62,6 +62,18 @@ class BaseServerSpec extends Specification {
         )).path == file.path
     }
 
+    def "file found for module with existing target url when suffixed with query string"() {
+        setup:
+        def file = getTempFile('.css')
+        server.loader.config.targetDir = file.parent
+        server.loader.config.baseUrl = '/foo'
+
+        expect:
+        server.findFileForModule(new BaseModule(
+            targetUrl: "/foo/$file.name?q=p&x",
+        )).path == file.path
+    }
+
 
 
     def "response headers have only Content-Length with empty module"() {
