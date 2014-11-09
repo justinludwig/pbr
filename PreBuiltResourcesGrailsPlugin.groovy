@@ -1,7 +1,7 @@
 
+import grails.util.Holders
 import org.c02e.plugin.pbr.PBR
 import org.c02e.plugin.pbr.run.servlet.TargetDirServingFilter
-import org.codehaus.groovy.grails.commons.ConfigurationHolder as CH
 import org.springframework.core.io.FileSystemResource
 import org.springframework.web.filter.DelegatingFilterProxy
 
@@ -124,7 +124,9 @@ Helps manage static resources, building them out when the app is packaged.
      * from raw grails config prior to PBR service initialization.
      */
     def getPreInitConfigProp(String prop, configHolder = null) {
-        def config = (configHolder ?: CH).config.grails.plugins.preBuiltResources
+        if (!configHolder)
+            configHolder = Holders.grailsApplication
+        def config = configHolder.config.grails.plugins.preBuiltResources
         // workaround for GROOVY-5731:
         // checking config before loader merges it prevents merging of base config
         if (config[prop] == [:])
