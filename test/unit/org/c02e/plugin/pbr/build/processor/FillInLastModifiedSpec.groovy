@@ -103,7 +103,7 @@ class FillInLastModifiedSpec extends Specification {
         when:
         processor.process module
         then:
-        module.lastModified == Date.parse('EEE, dd MMM yyyy HH:mm:ss Z', 
+        module.lastModified == Date.parse('EEE, dd MMM yyyy HH:mm:ss Z',
             'Fri, 08 Feb 2013 15:35:10 GMT')
     }
 

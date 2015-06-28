@@ -13,7 +13,7 @@ interface Loader {
     /**
      * Config properties from PreBuiltResourcesConfig.groovy.
      * Properties begin at 'grails.plugins.preBuiltResources':
-     * for example, access the property 
+     * for example, access the property
      * 'grails.plugins.preBuiltResources.contentType.calculate'
      * as 'contentType.calculate'.
      */

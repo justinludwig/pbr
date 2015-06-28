@@ -101,7 +101,7 @@ class ImageRendererSpec extends Specification {
             ''',
             targetContentType: 'image/svg+xml',
         )
-        then: out.toString() == 
+        then: out.toString() ==
             '''<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
                     <rect x="1in" y="1in" width="10in" height="10in" />
                 </svg>

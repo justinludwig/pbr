@@ -25,12 +25,12 @@ class FillInLastModified implements Processor {
 
         } else if (!localOnly) {
             try {
-                time = builder.tools.openConnection(url).with { 
+                time = builder.tools.openConnection(url).with {
                     if (delegate.url.protocol ==~ /https?/)
                         requestMethod = 'HEAD'
                     if (delegate.url.protocol ==~ /https?/ && responseCode != 200)
                         log?.warn """checking last-modified for
-                            module $module.id resulted in 
+                            module $module.id resulted in
                             $responseCode $responseMessage""".replaceAll(/\s+/, ' ')
                     lastModified
                 }

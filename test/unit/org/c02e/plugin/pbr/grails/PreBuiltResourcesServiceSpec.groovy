@@ -5,7 +5,7 @@ import spock.lang.Specification
 
 @Mixin(PbrTestHelper)
 class PreBuiltResourcesServiceSpec extends Specification {
-    
+
     def service = new PreBuiltResourcesService(
         grailsApplication: [config: testConfig],
     )

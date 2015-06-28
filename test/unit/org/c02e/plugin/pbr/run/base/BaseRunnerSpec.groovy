@@ -40,7 +40,7 @@ class BaseRunnerSpec extends Specification {
     }
 
     def "text renderer for any xml"() {
-        when: runner.loader.config.contentType.toRenderer.'*/xml' = 
+        when: runner.loader.config.contentType.toRenderer.'*/xml' =
             'org.c02e.plugin.pbr.run.renderer.TextRenderer'
         then: runner.getRendererForContentType('foo/xml').name == 'TextRenderer'
     }
@@ -156,7 +156,7 @@ class BaseRunnerSpec extends Specification {
         def request = [:]
 
         when:
-        runner.inline request, '* { color:#000 }', 
+        runner.inline request, '* { color:#000 }',
             id: 'for-print', contentType: 'text/css', media: 'print'
         then:
         runner.getInlineModules(request).keySet() as List == ['for-print']

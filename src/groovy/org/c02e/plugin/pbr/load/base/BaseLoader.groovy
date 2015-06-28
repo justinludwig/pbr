@@ -304,7 +304,7 @@ class BaseLoader implements Loader {
             return Loader.OTHER
 
         // replace '*' with '.*', while quoting the rest of the regex
-        Pattern.compile dfn.split(/\*/, -1).collect { 
+        Pattern.compile dfn.split(/\*/, -1).collect {
             it ? Pattern.quote(it) : ''
         }.join('.*')
     }

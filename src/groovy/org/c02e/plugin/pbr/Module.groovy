@@ -18,7 +18,7 @@ interface Module {
      */
     String targetContent
 
-    /** 
+    /**
      * URL of original resource, before processing.
      * In other words, the URL from the original configuration.
      * This may be a relative URL, like 'less/main.less',

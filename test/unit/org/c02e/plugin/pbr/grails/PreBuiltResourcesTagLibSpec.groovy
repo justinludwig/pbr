@@ -3,7 +3,7 @@ package org.c02e.plugin.pbr.grails
 import spock.lang.Specification
 
 class PreBuiltResourcesTagLibSpec extends Specification {
-    
+
     def tagLib = new PreBuiltResourcesTagLib(
         preBuiltResourcesService: [
             loader: [

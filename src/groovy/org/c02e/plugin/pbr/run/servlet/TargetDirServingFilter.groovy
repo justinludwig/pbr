@@ -15,9 +15,9 @@ import javax.servlet.http.HttpServletResponse
  */
 class TargetDirServingFilter implements Filter {
     def preBuiltResourcesService
-    
+
     // Filter
-    
+
     void init(FilterConfig config) throws ServletException {
     }
 

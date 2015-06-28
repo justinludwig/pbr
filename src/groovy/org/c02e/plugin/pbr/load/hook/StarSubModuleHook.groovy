@@ -20,7 +20,7 @@ class StarSubModuleHook implements LoaderHook {
     Map pre(Map moduleConfig) {
         if (!moduleConfig) return moduleConfig
 
-        // convert submodules 
+        // convert submodules
         moduleConfig.findAll { k,v -> v instanceof Map && v.submodules == '*' }.each { k,v ->
             v.remove('submodules')
             moduleConfig[k] = [submodules: v]

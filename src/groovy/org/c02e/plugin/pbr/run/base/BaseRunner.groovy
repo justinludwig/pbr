@@ -191,7 +191,7 @@ class BaseRunner implements Runner {
 
         if (!(requires instanceof Collection))
             requires = requires.toString().split(/[\s,]+/)
-        
+
         def inline = getInlineModules(request)
         def modules = [] as Set
 

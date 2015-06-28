@@ -13,7 +13,7 @@ interface RendererTools {
      * (except for class/style attrs, in which case
      * it concatenates all the non-null/blank values).
      * Skips attributes with a null/blank/empty name/value.
-     * <p>For example, <code>[title:['', 'AT&amp;T', 'Cingular'], 
+     * <p>For example, <code>[title:['', 'AT&amp;T', 'Cingular'],
      * width:'', class:[null, 'red', 'green']]</code> returns:
      * <code>' width="AT&amp;amp;T" class="red green"'</code>
      */

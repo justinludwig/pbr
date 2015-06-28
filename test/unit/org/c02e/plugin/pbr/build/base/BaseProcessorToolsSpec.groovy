@@ -181,7 +181,7 @@ class BaseProcessorToolsSpec extends Specification {
     def "connection can be opened with a protocol-relative url"() {
         expect: tools.openConnection('//www.google.com/').responseCode == 200
     }
- 
+
     def "redirects are followed when opening a connection"() {
         expect: tools.openConnection('//google.com/').responseCode == 200
     }
@@ -388,7 +388,7 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "working dir uses default if custom dir cannot be created"() {
-        setup: 
+        setup:
         tools.builder = new BaseBuilder(new BaseLoader(testConfig + [
             workingDir: nonExistantPath,
         ]))
@@ -400,7 +400,7 @@ class BaseProcessorToolsSpec extends Specification {
 
         then:
         file.exists()
-        file.path == "${tmpdir}/pbr" 
+        file.path == "${tmpdir}/pbr"
         log == ["cannot create working dir $nonExistantPath" as String]
     }
 
@@ -472,20 +472,20 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "will use existing working file for module with existing built url and noexistant source url"() {
-        setup: 
+        setup:
         def builtFile = tempFile
-        when: 
+        when:
         def workingFile = tools.getWorkingFile(new BaseModule(
             builtUrl: builtFile.path,
             sourceUrl: nonExistantPath,
         ))
-        then: 
+        then:
         workingFile.path == builtFile.path
         workingFile.lastModified() == builtFile.lastModified()
     }
 
     def "will create working file for module with no built url and existing source url"() {
-        setup: 
+        setup:
         tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('no-ext', 'test')
         def module = new BaseModule(
@@ -503,7 +503,7 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "will create working file with content type's extension for extensionless source url and source content-type"() {
-        setup: 
+        setup:
         tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('no-ext', 'test')
         def module = new BaseModule(
@@ -522,7 +522,7 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "will create working file with content-type's extension for different-extension source url and source content-type"() {
-        setup: 
+        setup:
         tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('foo.txt', 'test')
         def module = new BaseModule(
@@ -542,7 +542,7 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "will create working file with url's extension for source url with extension"() {
-        setup: 
+        setup:
         tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def sourceFile = getTempFile('foo.css', 'test')
         def module = new BaseModule(
@@ -561,14 +561,14 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "will use nonexistant working file for module with noexistant built url and existing source url"() {
-        setup: 
+        setup:
         def builtFile = tempFile
-        when: 
+        when:
         def workingFile = tools.getWorkingFile(new BaseModule(
             builtUrl: nonExistantPath,
             sourceUrl: tempFile.path,
         ))
-        then: 
+        then:
         workingFile.path == nonExistantPath
         !workingFile.exists()
     }
@@ -581,7 +581,7 @@ class BaseProcessorToolsSpec extends Specification {
     }
 
     def "will create working file with content type's extension for extensionless http source url and source content-type"() {
-        setup: 
+        setup:
         tools.builder = new BaseBuilder(new BaseLoader(testConfig))
         def module = new BaseModule(
             sourceUrl: '//google.com/',

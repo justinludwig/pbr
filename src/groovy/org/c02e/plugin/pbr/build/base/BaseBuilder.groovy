@@ -40,7 +40,7 @@ class BaseBuilder implements Builder {
         modules.each {
             loader.log.info "processing $it.id"
         }
-        getProcessors().each { proc -> 
+        getProcessors().each { proc ->
             modules.findAll { canProcess it, proc.name }.each {
                 loader.log.debug "processing $it.id with $proc.name"
                 proc.process it
