@@ -7,9 +7,9 @@ import org.springframework.web.filter.DelegatingFilterProxy
 
 class PreBuiltResourcesGrailsPlugin {
     // the plugin version
-    def version = "0.1-SNAPSHOT"
+    def version = "0.1"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "2.0 > *"
+    def grailsVersion = "2.3 > *"
     // the other plugins this plugin depends on
     def dependsOn = [:]
     // resources that are excluded from plugin packaging
@@ -27,7 +27,7 @@ class PreBuiltResourcesGrailsPlugin {
 
     def title = "Pre-Built Resources"
     def author = "Justin Ludwig"
-    def authorEmail = "justin@codetechnology.org"
+    def authorEmail = "justin@codetechnology.com"
     def description = '''
 Helps manage static resources, building them out when the app is packaged.
     '''
@@ -43,7 +43,7 @@ Helps manage static resources, building them out when the app is packaged.
     // Details of company behind the plugin (if there is one)
     def organization = [
         name: "CODE Technology",
-        url: "http://codesurvey.org/",
+        url: "http://www.codetechnology.com/",
     ]
 
     // Any additional developers beyond the author specified above.
@@ -53,7 +53,7 @@ Helps manage static resources, building them out when the app is packaged.
 //    def issueManagement = [ system: "JIRA", url: "http://jira.grails.org/browse/GPMYPLUGIN" ]
 
     // Online location of the plugin's browseable source code.
-//    def scm = [ url: "http://svn.codehaus.org/grails-plugins/" ]
+    def scm = [ url: "https://github.com/justinludwig/pbr" ]
 
     def doWithWebDescriptor = { xml ->
         def baseUrl = getPreInitConfigProp('baseUrl', application)
